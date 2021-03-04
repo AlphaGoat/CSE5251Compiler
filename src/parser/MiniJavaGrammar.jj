@@ -1,0 +1,390 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */options {
+DEBUG_PARSER=true;
+}
+
+PARSER_BEGIN(MiniJavaParser)
+package parser;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
+
+public class MiniJavaParser {
+
+public static String filename;
+//	public static errors.LexicalLog ll;
+//public static SyntaxLog sl;
+public static void main(String args[]) throws ParseException, TokenMgrError {
+	try {
+		MiniJavaParser parser = new MiniJavaParser(new java.io.FileReader(args[0]));
+	} catch (FileNotFoundException e) {
+	  System.out.println(e);
+	  System.exit(1);
+	}
+
+
+}
+}
+
+PARSER_END(MiniJavaParser)
+
+SKIP : 
+{
+    "/*" : WithinComment
+}
+
+<WithinComment> SKIP :
+{
+    "*/" : DEFAULT
+}
+
+<WithinComment> MORE:
+{
+    <~[]>
+}
+
+// Tokens
+SKIP :  { 
+	< "//" (~["\n", "\r"])* ("\n" | "\r" | "\r\n") > 
+//    |   < "/*" ()
+	| " " | "\t" | "\n" | "\f" | "\r" }
+TOKEN : { 
+	// Data Types
+      <BOOLEAN: "boolean" >
+    | <INTEGER: "int"     >
+    | <STRING:  "String"  >
+
+    | <CLASS:   "class"    >
+    | <PUBLIC:  "public"   >
+    | <STAT:    "static"   >
+    | <VOID:    "void"     >
+    | <EXTENDS: "extends"  >
+    | <RETURN:  "return"   >
+    | <THIS:    "this"     >
+    | <NEW:     "new"      >
+    | <MAIN:    "main"     >
+
+	// Statements
+    | < IF:    "if"    >   
+    | < ELSE:  "else"  > 
+    | < WHILE: "while" > 
+    | < GOTO:  "goto"  >
+    | < TRUE:  "true"  >
+    | < FALSE: "false" >
+    | < PRINT: "System.out.println" >
+    | < LENGTH: "length" >
+    | < #DIGIT: ["0"-"9"] >
+    | < ID: (["a"-"z"] | ["A"-"Z"]) (["a"-"z"] | ["A"-"Z"] | <DIGIT> | ["_"])* >
+    | < NUM: (<DIGIT>)+ >
+//    | < REAL: ( (<DIGIT>)+"."(<DIGIT)*) |
+//              ( (<DIGIT>)*+"."(<DIGIT>)+)>
+    | <LPAREN: "(" >
+    | <RPAREN: ")" >
+    | <LBRACK: "{" >
+    | <RBRACK: "}" >
+    | <LBRACE: "[" >
+    | <RBRACE: "]" >
+    | <SEMI: ";"   >
+    | <COMMA: ","  >
+
+	// Expressions
+    | < PLUS  : "+" >
+    | < MINUS : "-" >
+    | < STAR  : "*" >
+    | < DIV   : "/" > 
+    | < LTHAN : "<" >
+    | < GTHAN : ">" >
+    | < AND   : "&&" >
+    | < EQUAL: "==" >
+    | < ASSIGNMENT : "=" >
+//    | < BANG  : "!" >
+    | < PERIOD: "." >
+//    | < EMPTY_STRING: "" >
+
+    // Catch for unrecognized tokens
+    | < NOT_RECOGNIZED : ~[] >
+}
+
+
+void Program() :
+{}
+{	
+	try {
+//		MainClass() ( ClassDecl() )* <EOF>
+//		MainClass() ( ClassHeader() ClassBody() )* < EOF >
+		MainHeader() ( ClassDecl() )* < EOF >
+	} catch (ParseException e) {
+		System.err.println(e.getMessage());
+	}
+}
+
+void MainHeader() :
+{}
+{
+  try {
+    "class" < ID > "{" MainMethod() "}"
+  } catch (ParseException e) {
+    System.err.println(e.getMessage());
+	error_skipto(new Token(RBRACK, "}"));
+  }
+}
+
+void MainMethod() :
+{}
+{
+  try {
+    "public" "static" "void" "main" "(" "String" "[" "]" <ID> ")" "{" ( Stm() | BracketedStm() ) "}"
+  } catch (ParseException e) {
+    System.err.println(e.getMessage());
+    error_skipto(new Token(RBRACK, "}"));
+  }
+} 
+
+//void MainClass() :
+//{}
+//{
+//	try {
+//		"class" <ID> "{" "public" "static" "void" "main" "(" "String" "[" "]" <ID> ")" "{" ( Stm() | BracketedStm() ) "}" "}"
+//	} catch (ParseException e) {
+//	   System.out.println(e.toString());
+//	   error_skipto(RBRACK);
+//	}
+//}
+
+void ClassDecl() :
+{}
+{
+	try {
+		"class" <ID> ( "extends" <ID> )? "{" ( VarDecl() | MethodHeader() MethodBody() | < NOT_RECOGNIZED > )* "}"
+	} catch (ParseException e) {
+		System.err.println(e.getMessage());
+		error_skipto(new Token(RBRACK, "}"));
+	}
+}
+
+void VarDecl() :
+{}
+{
+	try {
+		Type() <ID> ";"
+	} catch (ParseException e) {
+	  	System.err.println(e.getMessage());
+		error_skipto(new Token(SEMI, ";"));
+	}
+}
+
+void MethodHeader() :
+{}
+{
+  try {
+    "public" Type() < ID > "(" ( Type() < ID > ( "," Type() < ID > )* )? ")"
+  } catch (ParseException e) {
+    System.err.println(e.getMessage());
+    error_skipto(new Token(RPAREN, ")"));
+  }
+}
+
+void MethodBody() :
+{}
+{
+	try {
+	  "{" ( LOOKAHEAD(2) VarDecl() | Stm() | BracketedStm() | ErrorProduction() )* "return" Exp() ";" "}"
+	} catch (ParseException e) {
+	  System.err.println(e.getMessage());
+	  error_skipto(new Token(RBRACK, "}"));
+	}
+}
+
+//void MethodDecl() :
+//{}
+//{
+//	try {
+//		"public" Type() <ID> "(" ( Type() <ID> ( "," Type() <ID> )* )? ")" "{" ( LOOKAHEAD(2) VarDecl() | Stm() | BracketedStm() )* "return" Exp() ";" "}"
+//	} catch (ParseException e) {
+//		System.out.println(e);
+//		error_skipto(RBRACK);
+//	}
+//
+//}
+
+void Type() :
+{}
+{
+	try {
+		 ( LOOKAHEAD(2) "int" "[" "]"
+		| "boolean"
+		| "int"
+		| <ID>)
+	} catch (ParseException e) {
+		System.err.println(e.getMessage());
+	}
+}
+
+void Stm() :
+{}
+{
+	try {
+	  (
+//		 ("{" ( Stm() )* "}"
+//		  "if" "(" Exp() ")" ( Stm() | BracketedStm() ) "else" ( Stm() | BracketedStm() )
+	      IfStm() ( Stm() | BracketedStm() ) "else" ( Stm() | BracketedStm() )
+//		| "while" "(" Exp() ")" ( Stm() | BracketedStm() )
+	  	| WhileStm() ( Stm() | BracketedStm() )
+		| "System.out.println" "(" Exp() ")" ";"
+		| LOOKAHEAD(2) <ID> "=" Exp() ";"
+		| LOOKAHEAD(2) <ID> "[" Exp() "]" "=" Exp() ";")
+	} catch(ParseException e) {
+	  	System.err.println(e.getMessage());
+		error_skipto(new Token(SEMI, ";"));
+	}
+}
+
+void IfStm() :
+{}
+{
+	try {	    "if" "(" Exp() ")"
+	} catch (ParseException e) {
+	  System.err.println(e.getMessage());
+	  error_skipto(new Token(RPAREN, ")"));
+	}
+}
+
+void WhileStm() :
+{}
+{
+	try {
+	  "while" "(" Exp() ")" 
+	} catch (ParseException e) {
+	  System.err.println(e.getMessage());
+	  error_skipto(new Token(RPAREN, ")"));
+	}
+}
+
+void BracketedStm() :
+{}
+{
+  try {
+    (      "{" ( Stm() | BracketedStm() )* "}"
+  )
+  } catch (ParseException e) {
+  System.err.println(e.getMessage());
+  error_skipto(new Token(RBRACK, "}"));
+} 
+}
+
+//void IfStm() :
+//{}
+//{
+//  try {
+//    "if" "(" Exp() ")" Stm() "else" Stm()
+//  } catch(ParseException e) {
+//    
+
+void Exp() :
+{}
+{
+	try {
+		
+		  LOOKAHEAD(2) "new" "int" "[" Exp() "]" ExpPrime()
+		| (<NUM> | "true" | "false" | <ID> | "this"| "new" <ID> "(" ")") ExpPrime()
+//		|  "new" "int" "[" Exp() "]"
+		|  "!" Exp() ExpPrime()
+		|  "(" Exp() ")" ExpPrime()
+		
+//		 ( 
+//		   Exp() ("&&" | "<" | "+" | "-" | "*") Exp()
+//		|  Exp() "[" Exp() "]"
+//		|  Exp() "." "length"
+//		|  Exp() "." <ID> "(" ( Exp() ( "," Exp() )* )? ")"
+//		)
+	} catch (ParseException e) {
+		System.err.println(e.getMessage());
+	}
+	
+}
+
+void ExpPrime() :
+{}
+{
+	try {
+		(
+		  ("&&" | "<" | "+" | "-" | "*") Exp() ExpPrime()
+		| "[" Exp() "]" ExpPrime()
+		| LOOKAHEAD(2) "." "length" ExpPrime()
+		| LOOKAHEAD(2) "." <ID> "(" ( Exp() ( "," Exp() )* )? ")" ExpPrime()
+		)?
+	} catch (ParseException e) {
+		System.err.println(e.getMessage());
+	}
+}
+
+void ErrorProduction() :
+{
+//	ParseException.count++;
+//	Token t = getNextToken();
+//	System.out.printf("%s:%d.%d: Error: Unrecognized symbol '%s'\n",
+//	MiniJavaParser.filename, t.beginLine, t.beginColumn, t.image);
+//	return;
+}
+{
+  try { 
+     < NOT_RECOGNIZED >
+   } catch (ParseException e) {
+     // Should never print
+     System.err.println(e.getMessage());
+   }
+}
+
+JAVACODE
+void error_skipto(Token expected) {
+  	//  Defined here:
+	//  https://www.cs.purdue.edu/homes/hosking/javacc/doc/errorrecovery.html
+     Token t;
+	 do {
+	    t = getNextToken();
+	      try { 
+     	  	if (t.kind == EOF) {
+       			throw new ParseException();
+       		}
+     	 } catch (ParseException e) {
+     	    System.err.printf("%s:%d.%d: Syntax Error -- Expecting a '%s'. Reached end of file while parsing.\n",
+       		e.filename, t.beginLine, t.beginColumn, expected.toString());
+       		break;
+     	}
+    } while (t.kind != expected.kind);
+}
+
+
+//void error_skipto(int kind) {
+
+//  */
+//	ParseException e = generateParseException();
+//	System.out.println(e.toString());
+//	Token t;
+//	do {
+//	  t = getNextToken();
+//	} while (t.kind != kind);
+//}
+
+//void ExpTerminal() :
+//{}
+//{
+//	try {
+//		(
+// 		  <NUM>
+//		|  "true"
+//		|  "false"
+//		|  <ID>
+//		|  "this"
+//		|  "new" <ID> "(" ")"
+//		  )
+//	} catch (ParseException e) {
+//		error(e);
+//	}
+//}
+		
+//void Input() :
+//{}
+//{ <EOF>
+//}
+
