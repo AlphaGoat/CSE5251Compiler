@@ -1,0 +1,108 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */
+options {
+DEBUG_PARSER=true;
+static=false;
+}
+
+PARSER_BEGIN(LexicalScanner)
+package Lexer;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
+import java.util.List;
+import java.util.ArrayList;
+
+public class LexicalScanner {
+
+public static String filename;
+//	public static errors.LexicalLog ll;
+//public static SyntaxLog sl;
+public static void main(String args[]) throws ParseException, TokenMgrError {
+    try {
+    	Lexer analyzer = new Lexer(new java.io.FileReader(args[0]));
+    } catch (FileNotFoundException e) {
+      System.out.println(e);
+      System.exit(1);
+    }
+}
+}
+
+PARSER_END(LexicalScanner)
+
+SKIP : 
+{
+    "/*" : WithinComment
+}
+
+<WithinComment> SKIP :
+{
+    "*/" : DEFAULT
+}
+
+<WithinComment> MORE:
+{
+    <~[]>
+}
+
+// Tokens
+SKIP :  { 
+	< "//" (~["\n", "\r"])* ("\n" | "\r" | "\r\n") > 
+//    |   < "/*" ()
+	| " " | "\t" | "\n" | "\f" | "\r" }
+TOKEN : { 
+	// Data Types
+      <BOOLEAN: "boolean" >
+    | <INTEGER: "int"     >
+    | <STRING:  "String"  >
+
+    | <CLASS:   "class"    >
+    | <PUBLIC:  "public"   >
+    | <STAT:    "static"   >
+    | <VOID:    "void"     >
+    | <EXTENDS: "extends"  >
+    | <RETURN:  "return"   >
+    | <THIS:    "this"     >
+    | <NEW:     "new"      >
+    | <MAIN:    "main"     >
+
+	// syntax.Statements
+    | < IF:    "if"    >   
+    | < ELSE:  "else"  > 
+    | < WHILE: "while" > 
+    | < GOTO:  "goto"  >
+    | < TRUE:  "true"  >
+    | < FALSE: "false" >
+    | < PRINT: "System.out.println" >
+    | < LENGTH: "length" >
+    | < #DIGIT: ["0"-"9"] >
+    | < ID: (["a"-"z"] | ["A"-"Z"]) (["a"-"z"] | ["A"-"Z"] | <DIGIT> | ["_"])* >
+    | < NUM: (<DIGIT>)+ >
+//    | < REAL: ( (<DIGIT>)+"."(<DIGIT)*) |
+//              ( (<DIGIT>)*+"."(<DIGIT>)+)>
+    | <LPAREN: "(" >
+    | <RPAREN: ")" >
+    | <LBRACK: "{" >
+    | <RBRACK: "}" >
+    | <LBRACE: "[" >
+    | <RBRACE: "]" >
+    | <SEMI: ";"   >
+    | <COMMA: ","  >
+
+	// syntax.Expressions
+    | < PLUS  : "+" >
+    | < MINUS : "-" >
+    | < STAR  : "*" >
+    | < DIV   : "/" > 
+    | < LTHAN : "<" >
+    | < GTHAN : ">" >
+    | < AND   : "&&" >
+    | < EQUAL: "==" >
+    | < ASSIGN : "=" >
+    | < BANG  : "!" >
+    | < PERIOD: "." >
+//    | < EMPTY_STRING: "" >
+
+    // Catch for unrecognized tokens
+    | < NOT_RECOGNIZED : ~[] >
+}

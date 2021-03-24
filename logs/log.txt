@@ -1,0 +1,18 @@
+/home/alphagoat/CodingPractice/Java/CSE_5251/MiniJavaSamples/BinaryTree.java, errors=0
+/home/alphagoat/CodingPractice/Java/CSE_5251/MiniJavaSamples/Factorial.java, errors=0
+/home/alphagoat/CodingPractice/Java/CSE_5251/MiniJavaSamples/BinarySearch.java, errors=0
+/home/alphagoat/CodingPractice/Java/CSE_5251/MiniJavaSamples/BubbleSort.java, errors=0
+Error: file /home/alphagoat/CodingPractice/Java/CSE_5251/MiniJavaSamples/BadSamples not found
+null:16.44:TypeError -- num is already defined as argument in ComputeFac
+null:17.13:TypeError -- num is already defined in ComputeFac
+null:4.13:TypeError -- non-array expression does not have field "length"
+null:4.13:TypeError -- boolean expression expected
+null:13.7:TypeError -- Detected cyclical pattern in inheritance chain from "Fac to "Fac2. Recommend taking a look at chain of inheritance.
+null:20.13:TypeError -- symbol "num_aux" undeclared
+null:22.13:TypeError -- symbol "num_aux" undeclared
+null:28.7:TypeError -- Detected cyclical pattern in inheritance chain from "Fac2 to "Fac. Recommend taking a look at chain of inheritance.
+null:37.16:TypeError -- instance type does not perform method calls
+null:37.16:TypeError -- boolean expression expected
+null:39.26:TypeError -- instance type does not perform method calls
+
+Units Test 0 exited with error: null

@@ -1,0 +1,683 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */options {
+DEBUG_PARSER=true;
+STATIC=false;
+}
+
+PARSER_BEGIN(MiniJavaSemanticAnalyzer)
+package semanticAnalysis;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
+import java.util.List;
+import java.util.ArrayList;
+
+public class MiniJavaSemanticAnalyzer {
+
+public static String filename;
+//	public static errors.LexicalLog ll;
+//public static SyntaxLog sl;
+public void main(String args[]) throws ParseException, TokenMgrError {
+    try {
+    	MiniJavaSemanticAnalyzer analyzer = new MiniJavaSemanticAnalyzer(new java.io.FileReader(args[0]));
+    } catch (FileNotFoundException e) {
+      System.out.println(e);
+      System.exit(1);
+    }
+}
+}
+
+PARSER_END(MiniJavaSemanticAnalyzer)
+
+SKIP : 
+{
+    "/*" : WithinComment
+}
+
+<WithinComment> SKIP :
+{
+    "*/" : DEFAULT
+}
+
+<WithinComment> MORE:
+{
+    <~[]>
+}
+
+// Tokens
+SKIP :  { 
+	< "//" (~["\n", "\r"])* ("\n" | "\r" | "\r\n") > 
+//    |   < "/*" ()
+	| " " | "\t" | "\n" | "\f" | "\r" }
+TOKEN : { 
+	// Data Types
+      <BOOLEAN: "boolean" >
+    | <INTEGER: "int"     >
+    | <STRING:  "String"  >
+
+    | <CLASS:   "class"    >
+    | <PUBLIC:  "public"   >
+    | <STAT:    "static"   >
+    | <VOID:    "void"     >
+    | <EXTENDS: "extends"  >
+    | <RETURN:  "return"   >
+    | <THIS:    "this"     >
+    | <NEW:     "new"      >
+    | <MAIN:    "main"     >
+
+	// syntax.Statements
+    | < IF:    "if"    >   
+    | < ELSE:  "else"  > 
+    | < WHILE: "while" > 
+    | < GOTO:  "goto"  >
+    | < TRUE:  "true"  >
+    | < FALSE: "false" >
+    | < PRINT: "System.out.println" >
+    | < LENGTH: "length" >
+    | < #DIGIT: ["0"-"9"] >
+    | < ID: (["a"-"z"] | ["A"-"Z"]) (["a"-"z"] | ["A"-"Z"] | <DIGIT> | ["_"])* >
+    | < NUM: (<DIGIT>)+ >
+//    | < REAL: ( (<DIGIT>)+"."(<DIGIT)*) |
+//              ( (<DIGIT>)*+"."(<DIGIT>)+)>
+    | <LPAREN: "(" >
+    | <RPAREN: ")" >
+    | <LBRACK: "{" >
+    | <RBRACK: "}" >
+    | <LBRACE: "[" >
+    | <RBRACE: "]" >
+    | <SEMI: ";"   >
+    | <COMMA: ","  >
+
+	// syntax.Expressions
+    | < PLUS  : "+" >
+    | < MINUS : "-" >
+    | < STAR  : "*" >
+    | < DIV   : "/" > 
+    | < LTHAN : "<" >
+    | < GTHAN : ">" >
+    | < AND   : "&&" >
+    | < EQUAL: "==" >
+    | < ASSIGN : "=" >
+    | < BANG  : "!" >
+    | < PERIOD: "." >
+//    | < EMPTY_STRING: "" >
+
+    // Catch for unrecognized tokens
+    | < NOT_RECOGNIZED : ~[] >
+}
+
+
+
+syntax.Program Start() :
+{
+    syntax.MainClass main;
+    syntax.ClassDecl c;
+    List<syntax.ClassDecl> classes = new ArrayList<syntax.ClassDecl>();
+}
+{
+    try {
+      
+	main = Main() ( c = Class() { classes.add(c); } )*
+	
+    } catch (ParseException e) {
+      
+	System.err.println(e.getMessage());
+	main = null;
+	c = null;
+	
+    }
+   	{ return new syntax.Program(main, classes); }
+}
+
+syntax.MainClass Main() :
+{ Token t1;
+  Token t2;
+  syntax.Identifier name;
+  syntax.Identifier arg;
+  syntax.Statement s;
+}
+{
+    try {
+	( "class" t1 = <ID> { name = new syntax.Identifier(t1.beginLine, t1.beginColumn, t1.image); }
+	  "{" "public" "static" "void" "main" "(" "String" "[" "]" 
+	  t2 = <ID> { arg = new syntax.Identifier(t2.beginLine, t2.beginColumn, t2.image); } ")"
+	  "{" s = Stm() "}" "}"
+	)
+
+    } catch (ParseException e) {
+		System.err.println(e.getMessage());
+		error_skipto(new Token(RBRACK, "}"));
+		name = null;
+		arg = null;
+		s = null;
+    }
+
+    { return new syntax.MainClass(name, arg, s); }
+    
+}
+
+syntax.ClassDecl Class() :
+{
+  syntax.ClassDecl c;
+}
+{
+  try {
+    (      LOOKAHEAD(3) c = ExtendingClass()
+    | c = SimpleClass()
+  )
+  } catch (ParseException e) {
+    System.err.println(e.getMessage());
+    c = null; // Dummy declaration
+  }
+  { return c; }
+}
+
+
+syntax.SimpleClassDecl SimpleClass() :
+{ Token t1;
+  Token t2;
+  syntax.Identifier cName;
+  syntax.IdentifierDecl f;
+  syntax.MethodDecl m;
+  List<syntax.FieldDecl> fields = new ArrayList<syntax.FieldDecl>();
+  List<syntax.MethodDecl> methods = new ArrayList<syntax.MethodDecl>();
+}
+{
+    try {
+	( "class" t1 = <ID> { cName = new syntax.Identifier(t1.beginLine, t1.beginColumn, t1.image); } // Class Declaration
+ 	  "{" ( f = Var("fields") { fields.add( (syntax.FieldDecl) f); } 
+		|  m = Method() { methods.add(m); } )* "}" // Class body
+	)
+    
+    } catch (ParseException ex) {
+		System.err.println(ex.getMessage());
+		error_skipto(new Token(RBRACK,"}"));		
+		cName = null;
+		fields = null;
+		methods = null;
+    }
+
+    { return new syntax.SimpleClassDecl(cName, fields, methods); }
+}
+
+syntax.ExtendingClassDecl ExtendingClass() :
+{ Token t1;
+  Token t2;
+  syntax.Identifier cName;
+  syntax.Identifier exName;
+  syntax.IdentifierDecl f;
+  syntax.MethodDecl m;
+  List<syntax.FieldDecl> fields = new ArrayList<syntax.FieldDecl>();
+  List<syntax.MethodDecl> methods = new ArrayList<syntax.MethodDecl>();
+}
+{
+    try {
+	( "class" t1 = <ID> { cName = new syntax.Identifier(t1.beginLine, t1.beginColumn, t1.image); } // Class Declaration
+	  "extends" t2 = <ID> {exName = new syntax.Identifier(t2.beginLine, t2.beginColumn, t2.image); } // Superclass Declaration
+ 	  "{" ( f = Var("fields") { fields.add( (syntax.FieldDecl) f); } 
+		|  m = Method() { methods.add(m); } )* "}" // Class body
+	)
+    
+    } catch (ParseException ex) {
+		System.err.println(ex.getMessage());
+		error_skipto(new Token(RBRACK, "}"));
+		cName = null;
+		exName = null;
+		fields = null;
+		methods = null;
+    }
+
+	{ return new syntax.ExtendingClassDecl(cName, exName, fields, methods); }
+    
+}
+
+syntax.IdentifierDecl Var(String varType) :
+{
+    syntax.Type at;
+    Token t;
+    syntax.Identifier ai;
+}
+{
+	try {
+		at = TypeProd() t = <ID> { ai = new syntax.Identifier(t.beginLine, t.beginColumn, t.image); } ";"
+	} catch (ParseException e) {
+	  	System.err.println(e.getMessage());
+		error_skipto(new Token(SEMI, ";"));
+		at = null;
+		ai = null;
+	}
+
+	{ if ( varType.equals("fields") ){ return new syntax.FieldDecl(at, ai); }
+	 else { return new syntax.LocalDecl(at, ai); } }
+}
+
+syntax.Type TypeProd() :
+{ Token t;
+  syntax.Type ret; }
+{
+  
+  try {
+    (
+       LOOKAHEAD(2) t = <INTEGER> "[" "]" { ret = syntax.Type.THE_INT_ARRAY_TYPE; }  	|  t = <INTEGER> { ret = syntax.Type.THE_INTEGER_TYPE; }
+    |  t = <BOOLEAN> { ret = syntax.Type.THE_BOOLEAN_TYPE; }
+    |  t = <ID> { ret = new syntax.IdentifierType(t.beginLine, t.beginColumn, t.image); }
+    )
+ 
+  } catch (ParseException e) {
+    System.err.println(e.getMessage());
+    ret = null;
+  }
+  
+  { return ret; }
+  
+}
+
+syntax.MethodDecl Method() :
+{
+  // Method name and args 
+  syntax.Type rType;
+  syntax.Type aType;
+  Token t1;
+  Token t2;
+  syntax.Identifier mName;
+  syntax.Identifier argName;
+  List<syntax.FormalDecl> afl = new ArrayList<syntax.FormalDecl>(); 
+
+  // Method body
+  syntax.IdentifierDecl l;
+  List<syntax.LocalDecl> ll = new ArrayList<syntax.LocalDecl>();
+  syntax.Statement s;
+  List<syntax.Statement> sl = new ArrayList<syntax.Statement>();
+  syntax.Expression ae;
+}
+{
+    try {
+        (
+	"public" rType = TypeProd() t1 = <ID> { mName = new syntax.Identifier(t1.beginLine, t1.beginColumn, t1.image); } // Method return type and name
+	"(" ( aType = TypeProd() t2 = <ID> { argName = new syntax.Identifier(t2.beginLine, t2.beginColumn, t2.image); afl.add(new syntax.FormalDecl(aType, argName)); } 
+		( "," aType = TypeProd() t2 = <ID> { argName = new syntax.Identifier(t2.beginLine, t2.beginColumn, t2.image); afl.add(new syntax.FormalDecl(aType, argName)); } )* )? ")" // argument list
+	"{" ( LOOKAHEAD(2) l = Var("local") { ll.add( (syntax.LocalDecl) l); } | s = Stm() { sl.add(s); } | ErrorProduction() )* // Method body (syntax.Statements and local variable declarations)
+	"return" ae = Exp() ";" "}" // Return syntax.Expression
+	  )
+  
+    } catch (ParseException e) {
+		System.err.println(e.getMessage());
+		error_skipto(new Token(RBRACK, "}"));
+		rType = null;
+		mName = null;
+		afl = null;
+		ll = null;
+		sl = null;
+		ae = null;		
+    }
+    { return new syntax.MethodDecl(rType, mName, afl, ll, sl, ae); }
+    
+}
+
+
+
+syntax.Statement Stm() :
+{ 
+    Token t; 
+    syntax.Statement as;
+}
+{
+	try {
+	      (
+	    as = IfStm()
+  	  | as = WhileStm()
+      | as = PrintStm()
+ 	  | LOOKAHEAD(2) as = AssignStm() 
+ 	  | as = ArrayAssignStm()
+	  | as = BracketedStm()
+	       )
+	       
+	}
+
+	catch(ParseException e) {
+	    System.err.println(e.getMessage());
+//	    error_skipto(new Token(SEMI, ";"));
+	    as = null;
+	}
+	
+	{ return as; }
+}
+
+syntax.ArrayAssign ArrayAssignStm()  :
+{
+    Token t;
+    syntax.Identifier nameOfArray;
+    syntax.Expression indexInArray;
+    syntax.Expression e;
+}
+{
+    try {
+          (
+        t = <ID> { nameOfArray = new syntax.Identifier(t.beginLine, t.beginColumn, t.image); } "[" indexInArray = Exp() "]" "=" e = Exp() ";"
+          )
+  
+    } catch(ParseException em) {
+        System.err.println(em.getMessage());
+		error_skipto(new Token(SEMI, ";"));
+		t = new Token(ID); 
+		nameOfArray = null;
+		indexInArray = null;
+		e = null;
+    }
+
+   	{ return new syntax.ArrayAssign(t.beginLine, t.beginColumn, nameOfArray, indexInArray, e); }
+    
+}
+
+syntax.Print PrintStm() :
+{ 
+    Token t;
+    syntax.Expression ae; 
+}
+{
+    try {
+          (
+        t = <PRINT> "(" ae = Exp() ")" ";"
+          )      
+    } catch(ParseException e) {
+        System.err.println(e.getMessage());
+		error_skipto(new Token(SEMI, ";"));
+		t = new Token(PRINT);
+		ae = null; 
+    }
+    
+	{ return new syntax.Print(t.beginLine, t.beginColumn, ae); }
+    
+}
+
+syntax.Assign AssignStm() :
+{
+    Token t;
+    syntax.Identifier ai;
+    syntax.Expression ae;
+}
+{
+    try {
+          (
+      t = <ID> { ai = new syntax.Identifier(t.beginLine, t.beginColumn, t.image); } "=" ae = Exp() ";"
+          )
+          
+    } catch(ParseException e) {
+        System.err.println(e.getMessage());
+        error_skipto(new Token(SEMI, ";"));
+        t = new Token(ID);
+        ai = null;
+        ae = null;
+    }
+	{ return new syntax.Assign(t.beginLine, t.beginColumn, ai, ae); }
+}
+
+syntax.If IfStm() :
+{ 
+    Token t;
+    syntax.Expression ae;
+    syntax.Statement as1;
+    syntax.Statement as2;
+}
+{
+    try {
+          (
+        t = <IF> "(" ae = Exp() ")" 
+		( as1 = Stm() )
+	"else"
+		( as2 = Stm() )
+        )
+
+        
+    } catch(ParseException e) {
+	System.err.println(e.getMessage());
+        error_skipto(new Token(SEMI, ";"));
+        t = new Token(IF);
+        ae = null;
+        as1 = null;
+        as2 = null; 
+    }
+	{ return new syntax.If(t.beginLine, t.beginColumn, ae, as1, as2); }
+    
+}
+
+syntax.While WhileStm() :
+{
+    Token t;
+    syntax.Expression ae;
+    syntax.Statement as;
+}
+{
+    try {
+          (
+        t = <WHILE> "(" ae = Exp() ")" as = Stm()
+        )
+        
+        
+    } catch (ParseException e) {
+		System.err.println(e.getMessage());
+		error_skipto(new Token(SEMI, ";"));
+		t = new Token(WHILE);
+		ae = null;
+		as = null; 
+    }
+    
+	{ return new syntax.While(t.beginLine, t.beginColumn, ae, as); }
+    
+}
+
+
+syntax.Block BracketedStm() :
+{ 
+  Token t;
+  syntax.Statement as; 
+  List<syntax.Statement> sl = new ArrayList<syntax.Statement>();
+}
+{
+  try {
+    (	t = <LBRACK> ( as = Stm() { sl.add(as); } )* "}"
+    )
+
+    
+  } catch (ParseException e) {
+      System.err.println(e.getMessage());
+      error_skipto(new Token(RBRACK, "}"));
+      t = new Token(LBRACK);
+      sl = null; 
+  }
+
+  { return new syntax.Block(sl); }
+  
+}
+
+
+syntax.Expression Exp() :
+{
+   Token t;
+   Token tid;
+   syntax.Identifier id;
+   syntax.Expression e1;
+   syntax.Expression re; 
+}
+{ 
+    try {
+	(
+	  re = Term() re = ExpPrime(re) 																   // Arithmetic Operations Expression
+
+	)
+	
+	
+    } catch (ParseException ex) {
+		System.err.println(ex.getMessage());
+		re = null;
+    }
+
+    { return re; }
+    
+}
+
+syntax.Expression ExpPrime(syntax.Expression e) :
+{ Token t;
+  syntax.Identifier id;
+  syntax.Expression ae;
+  syntax.Expression re = e;
+  List<syntax.Expression> el = new ArrayList<syntax.Expression>();
+}
+{
+    try {
+	( t = <PLUS> ae = Term() { re = new syntax.Plus(t.beginLine, t. beginColumn, e, ae); } re = ExpPrime(re)				// Addition Expression
+	| t = <MINUS>  ae = Term() { re = new syntax.Minus(t.beginLine, t.beginColumn, e, ae); } re = ExpPrime(re)		 	    // Subtraction Expression
+	| "[" ae = Exp() "]" { re = new syntax.ArrayLookup(e.lineNumber, e.columnNumber, e, ae); } re = ExpPrime(re)	    // Array Lookup Expression
+	| LOOKAHEAD(2) "." "length" { re = new syntax.ArrayLength(e.lineNumber, e.columnNumber, e); } re = ExpPrime(re)   // Array Length Expression
+	// Object call
+	| "." t = <ID> { id = new syntax.Identifier(t.beginLine, t.beginColumn, t.image); } 					   		// Identifier Expression
+	  "(" ( ae = Exp() { el.add(ae); } ( "," ae = Exp() { el.add(ae); } )* )? ")"  
+		{ re = new syntax.Call(e.lineNumber, e.columnNumber, e, id, el); } re = ExpPrime(re)							// Method call expression
+	)?
+	
+    } catch (ParseException ex) {
+		System.err.println(ex.getMessage());
+		re = null;
+    }
+    
+    { return re; }
+}
+		
+syntax.Expression Term() :
+{ syntax.Expression re; }
+{
+    try {
+	( re = Factor() re = TermPrime(re) )
+
+	
+    } catch(ParseException e) {
+    	System.err.println(e.getMessage());
+    	re = null;
+    }
+    
+    { return re; }
+    
+}
+
+syntax.Expression TermPrime(syntax.Expression e) :
+{ syntax.Expression ae;
+  syntax.Expression re = e;
+}
+{
+    try {
+       ( "*" ae = Factor() { re = new syntax.Times(e.lineNumber, e.columnNumber, e, ae); } re = TermPrime(re) )? // Multiplication Expression
+              
+    } catch (ParseException em) {
+       System.err.println(em.getMessage());
+    }
+    
+    { return re; }
+}
+
+syntax.Expression Factor() :
+{ syntax.Expression re;
+}
+{
+    try {
+	( re = Relation() re = FactorPrime(re) )
+	
+    } catch(ParseException e) {
+		System.err.println(e.getMessage());
+		re = null;
+    }
+
+    { return re; }
+    
+}
+
+syntax.Expression FactorPrime(syntax.Expression e) :
+{ 
+  syntax.Expression ae;
+  syntax.Expression re = e; }
+{
+    try {
+	( "&&" ae = Relation() { re = new syntax.And(e, ae); } re = FactorPrime(re)  // And logical Expression
+	| "<"  ae = Relation() { re = new syntax.LessThan(e, ae); } re = FactorPrime(re) // Less than logical expression
+	)?
+
+	
+    } catch(ParseException em) {
+		System.err.println(em.getMessage());
+    }
+    
+    { return re; }
+    
+}
+
+syntax.Expression Relation() :
+{ Token t;
+  Token tid;
+  int i;
+  syntax.Identifier id;
+  syntax.Expression e1;
+  syntax.Expression e2;
+  List<syntax.Expression> el = new ArrayList<syntax.Expression>();
+
+  syntax.Expression re; // return syntax.Expression
+}
+{
+    try {
+	( t = <NUM>  { i = Integer.parseInt(t.image); 
+		        re = new syntax.IntegerLiteral(t.beginLine, t.beginColumn, i); } 		// Integer Literal
+	| t = <TRUE> { re = new syntax.True(t.beginLine, t.beginColumn); }					// Boolean True 
+	| t = <FALSE> { re = new syntax.False(t.beginLine, t.beginColumn); }				// Boolean False
+	| t = <ID>  { re = new syntax.IdentifierExp(t.beginLine, t.beginColumn, t.image); } // Identifier
+	| t = <THIS> { re = new syntax.This(t.beginLine, t.beginColumn); }					// "this"
+	| "(" re = Exp() ")" 																// Parenthesized Expression
+	| LOOKAHEAD(2) t = <NEW> "int" "[" e1 = Exp() "]"
+			{ re = new syntax.NewArray(t.beginLine, t.beginColumn, e1); } re = ExpPrime(re) 		   // Create new array Exoressuib
+	| t = <NEW> tid = <ID> { id = new syntax.Identifier(tid.beginLine, tid.beginColumn, tid.image); }
+		"(" ")" { re = new  syntax.NewObject(t.beginLine, t.beginColumn, id); }  re = ExpPrime(re)     // Instantiate new object
+	| t = <BANG> e1 = Exp() { re = new syntax.Not(t.beginLine, t.beginColumn, e1); } re = ExpPrime(re) // NOT Expression
+	)
+
+	
+    } catch(ParseException e) {
+		System.err.println(e.getMessage());
+		re = null;
+    }
+    
+    { return re; }
+
+}
+
+void ErrorProduction() :
+{
+//	ParseException.count++;
+//	Token t = getNextToken();
+//	System.out.syntax.Printf("%s:%d.%d: Error: Unrecognized symbol '%s'\n",
+//	MiniJavaParser.filename, t.beginLine, t.beginColumn, t.image);
+//	return;
+}
+{
+  try { 
+     <NOT_RECOGNIZED>
+   } catch (ParseException e) {
+     // Should never syntax.Print
+     System.err.println(e.getMessage());
+   }
+}
+
+JAVACODE
+void error_skipto(Token expected) {
+  	//  Defined here:
+	//  https://www.cs.purdue.edu/homes/hosking/javacc/doc/errorrecovery.html
+     Token t;
+	 do {
+	    t = getNextToken();
+	      try { 
+     	  	if (t.kind == EOF) {
+       			throw new ParseException();
+       		}
+     	 } catch (ParseException e) {
+//     	    System.err.Printf("%s:%d.%d: Syntax Error -- Expecting a '%s'. Reached end of file while parsing.\n",
+//       		e.filename, t.beginLine, t.beginColumn, expected.toString());
+       		break;
+     	}
+    } while (t.kind != expected.kind);
+}
