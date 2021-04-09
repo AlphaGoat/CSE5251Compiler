@@ -1,8 +1,18 @@
 package main;
 
+import java.io.PrintWriter;
+
+// TODO: Just add parent class fields to child when making symbol table.
+// 		 Makes lookups easier, and there is functionally no difference
+
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+
+import errors.ParseErrorMsg;
+import errors.SemanticErrorMsg;
+import errors.LexicalErrorMsg;
 
 public class Compiler { 
 	
@@ -61,27 +71,24 @@ public class Compiler {
 //		for (int i = 0; i < filenameList.size(); i++) {
 		filename = f;
 		syntax.Program program;
+		
+		// Reinitialize Error Handlers
+		
+		LexicalErrorMsg.reInit();
+		ParseErrorMsg.reInit();
+		SemanticErrorMsg.reInit();
+
 //		filename = filenameList.get(i);
 		try {
 
-			Lexer.LexicalScanner scanner = new Lexer.LexicalScanner(new FileInputStream(filename));
+//			Lexer.LexicalScanner scanner = new Lexer.LexicalScanner(new FileInputStream(filename));
 			
-			if (verbose) {
-				scanner.enable_tracing();
-			}
-			else {
-				scanner.disable_tracing();
-			}
-			
-			/* First perform lexical scanning of input file */	
-			LexicalScan.performScan(scanner);
-//				if (LexicalScan.num_lexical_errors > 0) {
-//					System.exit(1);
-//				}
+//			semanticAnalysis.MiniJavaSemanticAnalyzer scanner = new semanticAnalysis.MiniJavaSemanticAnalyzer(
+//					new FileInputStream)
 			
 			semanticAnalysis.MiniJavaSemanticAnalyzer semanticsObject = new semanticAnalysis.MiniJavaSemanticAnalyzer(
 					new FileInputStream(filename));
-							
+			
 			if (verbose) {
 				semanticsObject.enable_tracing();
 			}
@@ -89,8 +96,23 @@ public class Compiler {
 				semanticsObject.disable_tracing();
 			}
 			
+			/* First perform lexical scanning of input file */	
+			LexicalScan.performScan(semanticsObject);
+//				if (LexicalScan.num_lexical_errors > 0) {
+//					System.exit(1);
+//				}
+			
+			semanticsObject.ReInit(new FileInputStream(filename));
+							
+//			if (verbose) {
+//				semanticsObject.enable_tracing();
+//			}
+//			else {
+//				semanticsObject.disable_tracing();
+//			}
+//			
 			/* Next try parsing */
-			// Gotta initialzie this to zero for parsing error
+			// Gotta initialize this to zero for parsing error
 			// count to be right at end
 			int num_errors;
 			try {
@@ -102,10 +124,10 @@ public class Compiler {
 				return num_errors;
 			}
 			
-			if ((num_errors = semanticAnalysis.ParseException.getCount()) > 0) {
-				int total_errors = num_errors + LexicalScan.num_lexical_errors;
-				System.out.printf("%s, errors=%d\n", filename, total_errors);
-				return total_errors;
+			int total_lex_syntax_errors = ParseErrorMsg.getCount() + LexicalErrorMsg.getCount();
+			if ( total_lex_syntax_errors > 0 ) {
+				System.out.printf("%s, errors=%d\n", filename, total_lex_syntax_errors);
+				return total_lex_syntax_errors;
 			}
 			
 			// With abstract syntax tree, visit nodes and identify semantics errors
@@ -121,9 +143,31 @@ public class Compiler {
 			TypeCheckVisitor tv = new TypeCheckVisitor();
 			tv.visit(program);
 			
-			num_errors = errors.TypeErrorMsg.getCount();
+			int total_semantic_errors = SemanticErrorMsg.getCount();
+			if ( total_semantic_errors > 0 ) {
+				System.out.printf("%s, errors=%d\n", filename, total_semantic_errors);
+				return total_semantic_errors;
+			}
+			
+			num_errors = errors.SemanticErrorMsg.getCount();
 			System.out.printf("%s, errors=%d\n", filename, num_errors);
 			
+			if (num_errors > 0) {
+				return num_errors;
+			}
+			
+			// Construct method fragments
+			int wordCount = 4;
+			LazyIRTreeVisitor lazy = new LazyIRTreeVisitor(wordCount);
+			lazy.visit(program);
+			
+			PrintWriter writer = new PrintWriter(System.out);
+			
+			// print out function fragments in IR Tree
+			for (tree.Stm fragment: lazy.methodFragments) {
+				tree.TreePrint.print(writer, fragment);
+			}
+					
 			return num_errors;
 			
 		} catch (FileNotFoundException e) {

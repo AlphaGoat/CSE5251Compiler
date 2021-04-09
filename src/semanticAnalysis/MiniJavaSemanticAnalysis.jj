@@ -121,7 +121,7 @@ syntax.Program Start() :
 	
     } catch (ParseException e) {
       
-	System.err.println(e.getMessage());
+//	System.err.println(e.getMessage());
 	main = null;
 	c = null;
 	
@@ -145,7 +145,7 @@ syntax.MainClass Main() :
 	)
 
     } catch (ParseException e) {
-		System.err.println(e.getMessage());
+//		System.err.println(e.getMessage());
 		error_skipto(new Token(RBRACK, "}"));
 		name = null;
 		arg = null;
@@ -166,7 +166,7 @@ syntax.ClassDecl Class() :
     | c = SimpleClass()
   )
   } catch (ParseException e) {
-    System.err.println(e.getMessage());
+//    System.err.println(e.getMessage());
     c = null; // Dummy declaration
   }
   { return c; }
@@ -190,7 +190,7 @@ syntax.SimpleClassDecl SimpleClass() :
 	)
     
     } catch (ParseException ex) {
-		System.err.println(ex.getMessage());
+//		System.err.println(ex.getMessage());
 		error_skipto(new Token(RBRACK,"}"));		
 		cName = null;
 		fields = null;
@@ -219,7 +219,7 @@ syntax.ExtendingClassDecl ExtendingClass() :
 	)
     
     } catch (ParseException ex) {
-		System.err.println(ex.getMessage());
+//		System.err.println(ex.getMessage());
 		error_skipto(new Token(RBRACK, "}"));
 		cName = null;
 		exName = null;
@@ -241,7 +241,7 @@ syntax.IdentifierDecl Var(String varType) :
 	try {
 		at = TypeProd() t = <ID> { ai = new syntax.Identifier(t.beginLine, t.beginColumn, t.image); } ";"
 	} catch (ParseException e) {
-	  	System.err.println(e.getMessage());
+//	  	System.err.println(e.getMessage());
 		error_skipto(new Token(SEMI, ";"));
 		at = null;
 		ai = null;
@@ -264,7 +264,7 @@ syntax.Type TypeProd() :
     )
  
   } catch (ParseException e) {
-    System.err.println(e.getMessage());
+//    System.err.println(e.getMessage());
     ret = null;
   }
   
@@ -301,7 +301,7 @@ syntax.MethodDecl Method() :
 	  )
   
     } catch (ParseException e) {
-		System.err.println(e.getMessage());
+//		System.err.println(e.getMessage());
 		error_skipto(new Token(RBRACK, "}"));
 		rType = null;
 		mName = null;
@@ -335,7 +335,7 @@ syntax.Statement Stm() :
 	}
 
 	catch(ParseException e) {
-	    System.err.println(e.getMessage());
+//	    System.err.println(e.getMessage());
 //	    error_skipto(new Token(SEMI, ";"));
 	    as = null;
 	}
@@ -357,7 +357,7 @@ syntax.ArrayAssign ArrayAssignStm()  :
           )
   
     } catch(ParseException em) {
-        System.err.println(em.getMessage());
+//        System.err.println(em.getMessage());
 		error_skipto(new Token(SEMI, ";"));
 		t = new Token(ID); 
 		nameOfArray = null;
@@ -380,7 +380,7 @@ syntax.Print PrintStm() :
         t = <PRINT> "(" ae = Exp() ")" ";"
           )      
     } catch(ParseException e) {
-        System.err.println(e.getMessage());
+//        System.err.println(e.getMessage());
 		error_skipto(new Token(SEMI, ";"));
 		t = new Token(PRINT);
 		ae = null; 
@@ -403,7 +403,7 @@ syntax.Assign AssignStm() :
           )
           
     } catch(ParseException e) {
-        System.err.println(e.getMessage());
+//        System.err.println(e.getMessage());
         error_skipto(new Token(SEMI, ";"));
         t = new Token(ID);
         ai = null;
@@ -430,7 +430,7 @@ syntax.If IfStm() :
 
         
     } catch(ParseException e) {
-	System.err.println(e.getMessage());
+//	System.err.println(e.getMessage());
         error_skipto(new Token(SEMI, ";"));
         t = new Token(IF);
         ae = null;
@@ -455,7 +455,7 @@ syntax.While WhileStm() :
         
         
     } catch (ParseException e) {
-		System.err.println(e.getMessage());
+//		System.err.println(e.getMessage());
 		error_skipto(new Token(SEMI, ";"));
 		t = new Token(WHILE);
 		ae = null;
@@ -480,7 +480,7 @@ syntax.Block BracketedStm() :
 
     
   } catch (ParseException e) {
-      System.err.println(e.getMessage());
+//      System.err.println(e.getMessage());
       error_skipto(new Token(RBRACK, "}"));
       t = new Token(LBRACK);
       sl = null; 
@@ -508,7 +508,7 @@ syntax.Expression Exp() :
 	
 	
     } catch (ParseException ex) {
-		System.err.println(ex.getMessage());
+//		System.err.println(ex.getMessage());
 		re = null;
     }
 
@@ -536,7 +536,7 @@ syntax.Expression ExpPrime(syntax.Expression e) :
 	)?
 	
     } catch (ParseException ex) {
-		System.err.println(ex.getMessage());
+//		System.err.println(ex.getMessage());
 		re = null;
     }
     
@@ -551,7 +551,7 @@ syntax.Expression Term() :
 
 	
     } catch(ParseException e) {
-    	System.err.println(e.getMessage());
+//    	System.err.println(e.getMessage());
     	re = null;
     }
     
@@ -568,7 +568,7 @@ syntax.Expression TermPrime(syntax.Expression e) :
        ( "*" ae = Factor() { re = new syntax.Times(e.lineNumber, e.columnNumber, e, ae); } re = TermPrime(re) )? // Multiplication Expression
               
     } catch (ParseException em) {
-       System.err.println(em.getMessage());
+//       System.err.println(em.getMessage());
     }
     
     { return re; }
@@ -582,7 +582,7 @@ syntax.Expression Factor() :
 	( re = Relation() re = FactorPrime(re) )
 	
     } catch(ParseException e) {
-		System.err.println(e.getMessage());
+//		System.err.println(e.getMessage());
 		re = null;
     }
 
@@ -602,7 +602,7 @@ syntax.Expression FactorPrime(syntax.Expression e) :
 
 	
     } catch(ParseException em) {
-		System.err.println(em.getMessage());
+//		System.err.println(em.getMessage());
     }
     
     { return re; }
@@ -638,7 +638,7 @@ syntax.Expression Relation() :
 
 	
     } catch(ParseException e) {
-		System.err.println(e.getMessage());
+//		System.err.println(e.getMessage());
 		re = null;
     }
     
@@ -659,7 +659,7 @@ void ErrorProduction() :
      <NOT_RECOGNIZED>
    } catch (ParseException e) {
      // Should never syntax.Print
-     System.err.println(e.getMessage());
+//     System.err.println(e.getMessage());
    }
 }
 

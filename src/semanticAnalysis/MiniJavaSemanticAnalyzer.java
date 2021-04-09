@@ -41,7 +41,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
                                       classes.add(c);
         }
       } catch (ParseException e) {
-        System.err.println(e.getMessage());
+//	System.err.println(e.getMessage());
         main = null;
         c = null;
       }
@@ -81,7 +81,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         jj_consume_token(RBRACK);
         jj_consume_token(RBRACK);
       } catch (ParseException e) {
-                System.err.println(e.getMessage());
+//		System.err.println(e.getMessage());
                 error_skipto(new Token(RBRACK, "}"));
                 name = null;
                 arg = null;
@@ -113,7 +113,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
           }
         }
       } catch (ParseException e) {
-    System.err.println(e.getMessage());
+//    System.err.println(e.getMessage());
     c = null; // Dummy declaration
 
       }
@@ -171,7 +171,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         }
         jj_consume_token(RBRACK);
       } catch (ParseException ex) {
-                System.err.println(ex.getMessage());
+//		System.err.println(ex.getMessage());
                 error_skipto(new Token(RBRACK,"}"));
                 cName = null;
                 fields = null;
@@ -235,7 +235,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         }
         jj_consume_token(RBRACK);
       } catch (ParseException ex) {
-                System.err.println(ex.getMessage());
+//		System.err.println(ex.getMessage());
                 error_skipto(new Token(RBRACK, "}"));
                 cName = null;
                 exName = null;
@@ -261,7 +261,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
                                            ai = new syntax.Identifier(t.beginLine, t.beginColumn, t.image);
         jj_consume_token(SEMI);
       } catch (ParseException e) {
-                System.err.println(e.getMessage());
+//	  	System.err.println(e.getMessage());
                 error_skipto(new Token(SEMI, ";"));
                 at = null;
                 ai = null;
@@ -306,7 +306,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
           }
         }
       } catch (ParseException e) {
-    System.err.println(e.getMessage());
+//    System.err.println(e.getMessage());
     ret = null;
       }
     {if (true) return ret;}
@@ -414,7 +414,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         jj_consume_token(SEMI);
         jj_consume_token(RBRACK);
       } catch (ParseException e) {
-                System.err.println(e.getMessage());
+//		System.err.println(e.getMessage());
                 error_skipto(new Token(RBRACK, "}"));
                 rType = null;
                 mName = null;
@@ -466,7 +466,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
           }
         }
       } catch (ParseException e) {
-            System.err.println(e.getMessage());
+//	    System.err.println(e.getMessage());
 //	    error_skipto(new Token(SEMI, ";"));
             as = null;
       }
@@ -494,7 +494,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         e = Exp();
         jj_consume_token(SEMI);
       } catch (ParseException em) {
-        System.err.println(em.getMessage());
+//        System.err.println(em.getMessage());
                 error_skipto(new Token(SEMI, ";"));
                 t = new Token(ID);
                 nameOfArray = null;
@@ -520,7 +520,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         jj_consume_token(RPAREN);
         jj_consume_token(SEMI);
       } catch (ParseException e) {
-        System.err.println(e.getMessage());
+//        System.err.println(e.getMessage());
                 error_skipto(new Token(SEMI, ";"));
                 t = new Token(PRINT);
                 ae = null;
@@ -545,7 +545,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         ae = Exp();
         jj_consume_token(SEMI);
       } catch (ParseException e) {
-        System.err.println(e.getMessage());
+//        System.err.println(e.getMessage());
         error_skipto(new Token(SEMI, ";"));
         t = new Token(ID);
         ai = null;
@@ -574,7 +574,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         jj_consume_token(ELSE);
         as2 = Stm();
       } catch (ParseException e) {
-        System.err.println(e.getMessage());
+//	System.err.println(e.getMessage());
         error_skipto(new Token(SEMI, ";"));
         t = new Token(IF);
         ae = null;
@@ -601,7 +601,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         jj_consume_token(RPAREN);
         as = Stm();
       } catch (ParseException e) {
-                System.err.println(e.getMessage());
+//		System.err.println(e.getMessage());
                 error_skipto(new Token(SEMI, ";"));
                 t = new Token(WHILE);
                 ae = null;
@@ -641,7 +641,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         }
         jj_consume_token(RBRACK);
       } catch (ParseException e) {
-      System.err.println(e.getMessage());
+//      System.err.println(e.getMessage());
       error_skipto(new Token(RBRACK, "}"));
       t = new Token(LBRACK);
       sl = null;
@@ -665,7 +665,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         re = Term();
         re = ExpPrime(re);
       } catch (ParseException ex) {
-                System.err.println(ex.getMessage());
+//		System.err.println(ex.getMessage());
                 re = null;
       }
       {if (true) return re;}
@@ -770,7 +770,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
           ;
         }
       } catch (ParseException ex) {
-                System.err.println(ex.getMessage());
+//		System.err.println(ex.getMessage());
                 re = null;
       }
       {if (true) return re;}
@@ -788,7 +788,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         re = Factor();
         re = TermPrime(re);
       } catch (ParseException e) {
-        System.err.println(e.getMessage());
+//    	System.err.println(e.getMessage());
         re = null;
       }
       {if (true) return re;}
@@ -816,7 +816,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
           ;
         }
       } catch (ParseException em) {
-       System.err.println(em.getMessage());
+
       }
       {if (true) return re;}
     throw new Error("Missing return statement in function");
@@ -833,7 +833,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
         re = Relation();
         re = FactorPrime(re);
       } catch (ParseException e) {
-                System.err.println(e.getMessage());
+//		System.err.println(e.getMessage());
                 re = null;
       }
       {if (true) return re;}
@@ -876,7 +876,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
           ;
         }
       } catch (ParseException em) {
-                System.err.println(em.getMessage());
+
       }
       {if (true) return re;}
     throw new Error("Missing return statement in function");
@@ -960,7 +960,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
           }
         }
       } catch (ParseException e) {
-                System.err.println(e.getMessage());
+//		System.err.println(e.getMessage());
                 re = null;
       }
       {if (true) return re;}
@@ -976,8 +976,7 @@ public void main(String args[]) throws ParseException, TokenMgrError {
       try {
         jj_consume_token(NOT_RECOGNIZED);
       } catch (ParseException e) {
-     // Should never syntax.Print
-     System.err.println(e.getMessage());
+
       }
     } finally {
       trace_return("ErrorProduction");

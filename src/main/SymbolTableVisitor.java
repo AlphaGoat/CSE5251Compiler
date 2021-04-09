@@ -99,7 +99,7 @@ public final class SymbolTableVisitor implements syntax.SyntaxTreeVisitor<Void>{
 		if (currClass.methods.get(key) != null) {
 			int line = m.i.lineNumber;
 			int col = m.i.columnNumber;
-			errors.TypeErrorMsg.complain(line, col, n + " is already defined as a method in " + 
+			errors.SemanticErrorMsg.complain(line, col, n + " is already defined as a method in " + 
 						currClass.getId().toString());
 		}
 		
@@ -136,7 +136,7 @@ public final class SymbolTableVisitor implements syntax.SyntaxTreeVisitor<Void>{
 		if (!currMethod.addParam(key, t)) {
 			int line = formal.i.lineNumber;
 			int col = formal.i.columnNumber;
-			errors.TypeErrorMsg.complain(line, col, fName + " is already defined as argument in " +
+			errors.SemanticErrorMsg.complain(line, col, fName + " is already defined as argument in " +
 					currMethod.getId().toString());
 		}
 		else {
@@ -151,10 +151,10 @@ public final class SymbolTableVisitor implements syntax.SyntaxTreeVisitor<Void>{
 		Symbol key = Symbol.symbol(lName);
 		VarBinding t = new VarBinding(key, l.t);
 
-		if (!currMethod.addLocal(key, t)) {
+		if ( !currMethod.addLocal(key, t) ) {
 			int line = l.i.lineNumber;
 			int col = l.i.columnNumber;
-			errors.TypeErrorMsg.complain(line, col, lName + " is already defined in " + currMethod.getId());
+			errors.SemanticErrorMsg.complain(line, col, lName + " is already defined in " + currMethod.getId());
 		}
 				
 		return null;
@@ -170,7 +170,7 @@ public final class SymbolTableVisitor implements syntax.SyntaxTreeVisitor<Void>{
 		if (!currClass.addField(key, t)) {
 			int line = f.i.lineNumber;
 			int col = f.i.columnNumber;
-			errors.TypeErrorMsg.complain(line, col, fname + " is already defined in " + currClass.getId());
+			errors.SemanticErrorMsg.complain(line, col, fname + " is already defined in " + currClass.getId());
 		}
 				
 		return null;
@@ -353,11 +353,13 @@ class ParamBinding extends VarBinding {
 class ClassBinding extends Binding {
 	Symbol parent = null;
 	
+	ArrayList<Symbol> fieldList;
 	HashMap<Symbol, Binding> fields;
 	HashMap<Symbol, Binding> methods;
 	
 	public ClassBinding(Symbol n) { 
 		name = n;
+		fieldList = new ArrayList<Symbol>();
 		fields = new HashMap<Symbol, Binding>();
 		methods = new HashMap<Symbol, Binding>();
 		}
@@ -365,6 +367,7 @@ class ClassBinding extends Binding {
 	public ClassBinding(Symbol n, Symbol p) { 
 		name = n; 
 		parent = p; 
+		fieldList = new ArrayList<Symbol>();
 		fields = new HashMap<Symbol, Binding>();
 		methods = new HashMap<Symbol, Binding>();
 	}
@@ -391,6 +394,7 @@ class ClassBinding extends Binding {
 		}
 		else {
 			fields.put(fName, t);
+			fieldList.add(fName);
 			return true;
 		}
 	}
@@ -403,6 +407,7 @@ class ClassBinding extends Binding {
 class MethodBinding extends Binding {
 	syntax.Type rtype;
 	ArrayList<Symbol> paramList;
+	ArrayList<Symbol> localList;
 	HashMap<Symbol, Binding> params;
 	HashMap<Symbol, Binding> locals;
 	
@@ -411,6 +416,7 @@ class MethodBinding extends Binding {
 		rtype = r;
 		paramList = new ArrayList<Symbol>();
 		params = new HashMap<Symbol, Binding>();
+		localList = new ArrayList<Symbol>();
 		locals = new HashMap<Symbol, Binding>();
 	}		
 	
@@ -436,11 +442,12 @@ class MethodBinding extends Binding {
 		
 		// Check if symbol has already been added to the 
 		// symbol table for method
-		if ((params.get(lName) != null) || (locals.get(lName) != null)) {
+		if ( params.get(lName) != null || locals.get(lName) != null ) {
 			return false;
 		}
 		else {
 			locals.put(lName, t);
+			localList.add(lName);
 			return true;
 		}
 	
@@ -452,6 +459,8 @@ class MethodBinding extends Binding {
 }
 
 class PrintSymbolTable {
+	
+	int a;
 	
 	public PrintSymbolTable() {
 		for (Map.Entry<Symbol, Binding> entry: 

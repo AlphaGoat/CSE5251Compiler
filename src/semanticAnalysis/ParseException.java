@@ -3,6 +3,7 @@
 package semanticAnalysis;
 
 import main.Compiler;
+import errors.ParseErrorMsg;
 
 //import parser.MiniJavaParserConstants;
 //import parser.Token;
@@ -121,10 +122,13 @@ public class ParseException extends Exception {
 	      if (expectedTokenSequences[i][expectedTokenSequences[i].length - 1] != 0) {
 	        expected.append("...");
 	      }
-	      expected.append(eol).append("    ");
+//	      expected.append(eol).append("    ");
 	    }
-	    String retval = Compiler.filename + ":" + currentToken.next.beginLine + "." + currentToken.next.beginColumn + ": Syntax Error --";
+//	    String retval = Compiler.filename + ":" + currentToken.next.beginLine + "." + currentToken.next.beginColumn + ": Syntax Error --";
+	    String retval = "";
 	    Token tok = currentToken.next;
+	    int line = tok.beginLine;
+	    int col = tok.beginColumn;
 	    if (tok.kind == MiniJavaSemanticAnalyzerConstants.EOF) {
 	    	retval += " Reached end of file while parsing.";
 	    }
@@ -158,6 +162,7 @@ public class ParseException extends Exception {
 	      retval += "Was expecting one of:" + eol + "    ";
 	    }
 	    retval += expected.toString();
+	    ParseErrorMsg.complain(line, col, retval);
 	    return retval;
  
   }

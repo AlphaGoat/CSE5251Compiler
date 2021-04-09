@@ -2,23 +2,17 @@ package errors;
 
 import main.Compiler;
 
-public class ErrorMsg {
-	static int errorCount = 0;
+public interface ErrorMsg {
+	final static String errorType = "Error";
 	
-	public void complain(String msg) {
-		errorCount++;
+	public static void complain(String msg) {
 		System.err.println(msg);
 	}
 	
-	public void complain(int l, int c, String msg) {
-		errorCount++;
+	public static void complain(int l, int c, String msg) {
 		String line = String.valueOf(l);
 		String col = String.valueOf(c);
-		msg = Compiler.filename + ":" + line + "." + col + ":" + "ERROR -- " + msg;
+		msg = Compiler.filename + ":" + line + "." + col + ":" + errorType + msg;
 		System.err.println(msg);
-	}
-	
-	public int getCount() {
-		return errorCount;
 	}
 }

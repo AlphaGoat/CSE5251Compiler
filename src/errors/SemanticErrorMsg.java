@@ -2,10 +2,9 @@ package errors;
 
 import main.Compiler;
 
-public class ParseErrorMsg implements ErrorMsg{
+public class SemanticErrorMsg implements ErrorMsg {
+	final static String errorType = "TypeError";
 	static int errorCount = 0;
-	final static String errorType = "Syntax Error";
-	
 	public static void complain(String msg) {
 		errorCount++;
 		System.err.println(msg);
@@ -15,7 +14,7 @@ public class ParseErrorMsg implements ErrorMsg{
 		errorCount++;
 		String line = String.valueOf(l);
 		String col = String.valueOf(c);
-		msg = Compiler.filename + ":" + line + "." + col + ":" + "Syntax Error -- " + msg;
+		msg = Compiler.filename + ":" + line + "." + col + ":" + "SemanticError -- " + msg;
 		System.err.println(msg);
 	}
 	
@@ -27,3 +26,4 @@ public class ParseErrorMsg implements ErrorMsg{
 		errorCount = 0;
 	}
 }
+
