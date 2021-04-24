@@ -1,10 +1,11 @@
-package main;
+package visitors;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import errors.SemanticErrorMsg;
+import main.Symbol;
 
 public class TypeCheckVisitor implements syntax.SyntaxTreeVisitor<TypeSignature>{
 
@@ -74,27 +75,31 @@ public class TypeCheckVisitor implements syntax.SyntaxTreeVisitor<TypeSignature>
 					return tw;
 				}
 				
+//				else {
+//					
+//					// Go through inheritance stack and see whether symbol is a field
+//					for (int i = 0; i < currInheritanceStack.size(); i++ ) {
+//						Symbol nextClassKey = currInheritanceStack.get(i);
+//						ClassBinding nextClass = (ClassBinding) SymbolTableVisitor.symbolTable.get(nextClassKey);
+//						
+//						
+//						if ( nextClass.fields.get(key) != null ) {
+//							VarBinding var = (VarBinding) nextClass.fields.get(key);
+//							t = var.varType;
+//							
+//							TypeSignature tw = t.accept(this);
+//							return tw;
+//						}
+//					}
+//					
+//					// If none of classes in inheritance chain have field, return null
+//					return new NullTypeSignature();
+//					
+//				}
 				else {
-					
-					// Go through inheritance stack and see whether symbol is a field
-					for (int i = 0; i < currInheritanceStack.size(); i++ ) {
-						Symbol nextClassKey = currInheritanceStack.get(i);
-						ClassBinding nextClass = (ClassBinding) SymbolTableVisitor.symbolTable.get(nextClassKey);
-						
-						
-						if ( nextClass.fields.get(key) != null ) {
-							VarBinding var = (VarBinding) nextClass.fields.get(key);
-							t = var.varType;
-							
-							TypeSignature tw = t.accept(this);
-							return tw;
-						}
-					}
-					
-					// If none of classes in inheritance chain have field, return null
 					return new NullTypeSignature();
-					
 				}
+				
 			}
 				
 			else if (currMethod.locals.get(key) == null) {
@@ -128,27 +133,31 @@ public class TypeCheckVisitor implements syntax.SyntaxTreeVisitor<TypeSignature>
 			}
 			
 			else {
-				
-				// Go through inheritance stack and see whether symbol is a field
-				for (int i = 0; i < currInheritanceStack.size(); i++ ) {
-					Symbol nextClassKey = currInheritanceStack.get(i);
-					ClassBinding nextClass = (ClassBinding) SymbolTableVisitor.symbolTable.get(nextClassKey);
-					
-					if ( nextClass.fields.get(key) != null ) {
-						VarBinding var = (VarBinding) nextClass.fields.get(key);
-						t = var.varType;
-						TypeSignature tw = t.accept(this);
-						
-						return tw;
-					}
-				}
-				
-				// If none of classes in inheritance chain have field, return null
 				return new NullTypeSignature();
-				
-				// Check class and its parents 
-				
 			}
+			
+//			else {
+//				
+//				// Go through inheritance stack and see whether symbol is a field
+//				for (int i = 0; i < currInheritanceStack.size(); i++ ) {
+//					Symbol nextClassKey = currInheritanceStack.get(i);
+//					ClassBinding nextClass = (ClassBinding) SymbolTableVisitor.symbolTable.get(nextClassKey);
+//					
+//					if ( nextClass.fields.get(key) != null ) {
+//						VarBinding var = (VarBinding) nextClass.fields.get(key);
+//						t = var.varType;
+//						TypeSignature tw = t.accept(this);
+//						
+//						return tw;
+//					}
+//				}
+//				
+//				// If none of classes in inheritance chain have field, return null
+//				return new NullTypeSignature();
+//				
+//				// Check class and its parents 
+//				
+//			}
 		}
 		
 	}

@@ -4,6 +4,7 @@ import java.io.FileReader;
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.ArrayList;
+import errors.ParseErrorMsg;
 
 /** Token Manager. */
 public class MiniJavaSemanticAnalyzerTokenManager implements MiniJavaSemanticAnalyzerConstants

@@ -2,12 +2,6 @@
 /* JavaCCOptions:KEEP_LINE_COL=null */
 package semanticAnalysis;
 
-import main.Compiler;
-import errors.ParseErrorMsg;
-
-//import parser.MiniJavaParserConstants;
-//import parser.Token;
-
 /**
  * This exception is thrown when parse errors are encountered.
  * You can explicitly create objects of this exception type by
@@ -26,9 +20,6 @@ public class ParseException extends Exception {
    */
   private static final long serialVersionUID = 1L;
 
-  public static int count = 0;
-//  public static String filename;
-  
   /**
    * This constructor is used by the method "generateParseException"
    * in the generated parser.  Calling this constructor generates
@@ -44,7 +35,6 @@ public class ParseException extends Exception {
     currentToken = currentTokenVal;
     expectedTokenSequences = expectedTokenSequencesVal;
     tokenImage = tokenImageVal;
-    count++;
   }
 
   /**
@@ -59,18 +49,11 @@ public class ParseException extends Exception {
 
   public ParseException() {
     super();
-    count++;
   }
 
   /** Constructor with message. */
   public ParseException(String message) {
     super(message);
-    count++;
-  }
-  
-  public ParseException(int i) {
-//	  setFilename(filename);
-	  setCount(i);
   }
 
 
@@ -105,66 +88,44 @@ public class ParseException extends Exception {
   private static String initialise(Token currentToken,
                            int[][] expectedTokenSequences,
                            String[] tokenImage) {
-	  
-	    String eol = System.getProperty("line.separator", "\n");
-	    StringBuffer expected = new StringBuffer();
-	    int maxSize = 0;
-	    for (int i = 0; i < expectedTokenSequences.length; i++) {
-	      if (maxSize < expectedTokenSequences[i].length) {
-	        maxSize = expectedTokenSequences[i].length;
-	      }
-	      for (int j = 0; j < expectedTokenSequences[i].length; j++) {
-	    	if (tokenImage[expectedTokenSequences[i][j]].equals("<NOT_RECOGNIZED>")) {
-	    		continue;
-	    	}
-	        expected.append(tokenImage[expectedTokenSequences[i][j]]).append(' ');
-	      }
-	      if (expectedTokenSequences[i][expectedTokenSequences[i].length - 1] != 0) {
-	        expected.append("...");
-	      }
-//	      expected.append(eol).append("    ");
-	    }
-//	    String retval = Compiler.filename + ":" + currentToken.next.beginLine + "." + currentToken.next.beginColumn + ": Syntax Error --";
-	    String retval = "";
-	    Token tok = currentToken.next;
-	    int line = tok.beginLine;
-	    int col = tok.beginColumn;
-	    if (tok.kind == MiniJavaSemanticAnalyzerConstants.EOF) {
-	    	retval += " Reached end of file while parsing.";
-	    }
-	    else {
-	    	retval += " Encountered ";
-		    for (int i = 0; i < maxSize; i++) {
-		      if (i != 0) retval += " ";
-		      if (tok.kind == 0) {
-		        retval += tokenImage[0];
-		        break;
-		      }
-		//     if (tok.kind == MiniJavaParserConstants.NOT_RECOGNIZED) {
-		//    	  num_lexical_errors++;
-		//   	  characters.add(tok.image);
-		//          line_numbers.add(tok.beginLine);
-		//          col_numbers.add(tok.beginColumn); 
-		//          System.out.println("not recognized error");
-		//      }
-		//      retval += " " + tokenImage[tok.kind];
-		      retval += " \"";
-		      retval += add_escapes(tok.image);
-		      retval += "\"";
-		      tok = tok.next;
-		    }
-	    }
-//	    retval += "\" at line " + currentToken.next.beginLine + ", column " + currentToken.next.beginColumn;
-	    retval += "." + eol;
-	    if (expectedTokenSequences.length == 1) {
-	      retval += "Was expecting:" + eol + "    ";
-	    } else {
-	      retval += "Was expecting one of:" + eol + "    ";
-	    }
-	    retval += expected.toString();
-	    ParseErrorMsg.complain(line, col, retval);
-	    return retval;
- 
+    String eol = System.getProperty("line.separator", "\n");
+    StringBuffer expected = new StringBuffer();
+    int maxSize = 0;
+    for (int i = 0; i < expectedTokenSequences.length; i++) {
+      if (maxSize < expectedTokenSequences[i].length) {
+        maxSize = expectedTokenSequences[i].length;
+      }
+      for (int j = 0; j < expectedTokenSequences[i].length; j++) {
+        expected.append(tokenImage[expectedTokenSequences[i][j]]).append(' ');
+      }
+      if (expectedTokenSequences[i][expectedTokenSequences[i].length - 1] != 0) {
+        expected.append("...");
+      }
+      expected.append(eol).append("    ");
+    }
+    String retval = "Encountered \"";
+    Token tok = currentToken.next;
+    for (int i = 0; i < maxSize; i++) {
+      if (i != 0) retval += " ";
+      if (tok.kind == 0) {
+        retval += tokenImage[0];
+        break;
+      }
+      retval += " " + tokenImage[tok.kind];
+      retval += " \"";
+      retval += add_escapes(tok.image);
+      retval += " \"";
+      tok = tok.next;
+    }
+    retval += "\" at line " + currentToken.next.beginLine + ", column " + currentToken.next.beginColumn;
+    retval += "." + eol;
+    if (expectedTokenSequences.length == 1) {
+      retval += "Was expecting:" + eol + "    ";
+    } else {
+      retval += "Was expecting one of:" + eol + "    ";
+    }
+    retval += expected.toString();
+    return retval;
   }
 
   /**
@@ -221,14 +182,6 @@ public class ParseException extends Exception {
       }
       return retval.toString();
    }
-  
-  public static void setCount(int i) {
-	  count = i;
-  }
-  
-  public static int getCount() {
-	  return count;
-  }
 
 }
 /* JavaCC - OriginalChecksum=249a64bab9af9e9a7b9d1496d963d6c7 (do not edit this line) */

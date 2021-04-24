@@ -1,9 +1,13 @@
-package main;
+package visitors;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import main.Symbol;
+import tree.BINOP;
+import tree.CONST;
 import tree.MEM;
+import tree.SEQ;
 
 
 // TODO: implement checks for empty statements
@@ -12,30 +16,20 @@ import tree.MEM;
 
 public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 
-//	ArrayList<String> CurrLabels = new ArrayList<String>();
+	tree.TEMP stackPointer; // Points to current frame's frame pointer
+	tree.TEMP currFramePointer;
+	frame.Frame currFrame;
 	
-//	int wordSize;
-	final int wordSize; 
-	
-	String currClass;
-	String currMethod;
-//	Pair <String, String> methodString; // Pair containing method name and class where 
-										// it resides
-	
+	Symbol currClassKey;
+	Symbol currMethodKey;
+
 	/* Label for end of code fragments */
 	tree.NameOfLabel epilog;
 	
 	// Array to hold method fragments
-	public static ArrayList<tree.Stm> methodFragments = new ArrayList<tree.Stm>();
-		
-	public LazyIRTreeVisitor(int sz) {
-		// TODO Auto-generated constructor stub
-		wordSize = sz;
-	}
+	public ArrayList<MethodFragment> methodFragments = new ArrayList<MethodFragment>();
 	
-	public int getWordSize() {
-		return wordSize;
-	}
+	private int whileCounter = 0;
 	
 	private tree.Exp lookupVar(Symbol varKey) {
 		// lookup variable in current method to see if 
@@ -43,87 +37,51 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 		// things, it must be a field in the class
 		
 		// Get bindings for class and method
-		Symbol methodKey = Symbol.symbol(currMethod);
-		Symbol classKey = Symbol.symbol(currClass);
 		
-		ClassBinding cb = (ClassBinding) SymbolTableVisitor.symbolTable.get(classKey);
-		MethodBinding mb = (MethodBinding) cb.methods.get(methodKey);
+		ClassBinding cb = (ClassBinding) SymbolTableVisitor.symbolTable.get(currClassKey);
+		MethodBinding mb = (MethodBinding) cb.methods.get(currMethodKey);
 
 		// Lookup in method's locals
 		if ( mb.locals.get(varKey) != null ) {
-			
-			// get offset of local
-			int offset = mb.localList.indexOf(varKey);
-			
-			// Return local's location in memory
-			return new tree.MEM(new tree.BINOP(tree.BINOP.PLUS,
-								  new tree.TEMP("fp"),
-								  new tree.CONST((offset+1) * wordSize)));
+
+			// Lookup local in stack frame
+			return currFrame.lookupVar(varKey); 
+
 			
 		}
 		
 		// If it's not in method's locals, check params
 		else if ( mb.params.get(varKey) != null ) {
+
 			
-			// get offset of param
-			int offset = mb.paramList.indexOf(varKey);
-			
-			// Return TEMP storing param's register
-			return new tree.TEMP("%i" + Integer.toString(offset + 1));
-			
+			// lookup param in stack frame
+			return currFrame.lookupVar(varKey);
+
 		}
 		
 		// otherwise, the variable must be one of the class's fields
 		else {
 			
-			// Get field in class. If it's not in the current class,
-			// check its parents
-			if ( cb.fields.get(varKey) == null ) {
-				
-				// Traverse class's parents to get field
-				int offset = cb.fieldList.size();
-				ClassBinding p = cb;
-				while ( p.parent != null ) {
-					p = (ClassBinding) SymbolTableVisitor.symbolTable.get(p.parent);
-					if ( p.fields.get(varKey) != null ) {
-						break;
-					}
-					
-					offset += p.fieldList.size();
-				}
-				
-				offset = p.fieldList.indexOf(varKey);
-				
-				// Return location in memory pointed to by "this" ptr (plus offset)
-				return new tree.MEM( new tree.BINOP(tree.BINOP.PLUS,
-									  				new tree.TEMP("%i0"),
-									  				new tree.CONST((offset + 1) * 
-									  				wordSize)));
-				
-			}
+			int offset = cb.fieldList.indexOf(varKey);
+
+			/* Look up location of "this" register in Stack Frame */
+			return new tree.MEM(new tree.BINOP(tree.BINOP.PLUS,
+						  		currFrame.lookupVar(Symbol.symbol("this")),
+						  		new tree.CONST((offset + 1) * currFrame.getWordSize())));
 			
-			else {
-				int offset = cb.fieldList.indexOf(varKey);
-				
-				return new tree.MEM(new tree.BINOP(tree.BINOP.PLUS,
-						  			new tree.TEMP("%i0"),
-						  			new tree.CONST((offset + 1) * wordSize)));
-			}
-			
-		}	
+		}
 	}
 
 	public tree.Stm constructArrayIndexCheck(tree.Exp arrayMemLocation,
 											 tree.Exp indexExp) {
-		tree.Exp length = new tree.MEM(new tree.BINOP(tree.BINOP.PLUS, 
-			 	  arrayMemLocation,
-			 	  new tree.BINOP(tree.BINOP.MUL, 
-			 			  		 new tree.CONST(1), 
-			 			  		 new tree.CONST(wordSize))
-			 ));
+//		tree.Exp length = new tree.MEM(new tree.BINOP(tree.BINOP.PLUS, 
+//			 	  arrayMemLocation,
+//			 	  new tree.BINOP(tree.BINOP.MUL, 
+//			 			  		 new tree.CONST(1), 
+//			 			  		 new tree.CONST(currFrame.wordSize))
+//			 ));
+		tree.Exp length = new tree.MEM(arrayMemLocation);
 		
-//		tree.NameOfLabel negIndex = new tree.NameOfLabel("array", 
-//				"negative", "index");
 		
 		tree.NameOfLabel nextCheck = new tree.NameOfLabel("array", "check", 
 				"less", "length");
@@ -145,7 +103,15 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 		tree.NameOfLabel contAssign = new tree.NameOfLabel("array", "assign");
 		
 		tree.CALL indexOutOfBoundsCall = new tree.CALL(new tree.NAME(
-				"print_err_out_of_bounds"));
+				"print_err_out_of_bounds"), new tree.CONST(1));
+		
+		if (indexExp == null) {
+			System.out.println("indexExp null");
+		}
+		
+		else if (length == null) {
+			System.out.println("length null");
+		}
 		
 		tree.CJUMP ltLength = new tree.CJUMP(tree.CJUMP.LT,
 											 indexExp,
@@ -176,12 +142,12 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 		ClassBinding cb = (ClassBinding) SymbolTableVisitor.symbolTable.get(key);
 		numFields += cb.fieldList.size();
 		
-		ClassBinding parentClass = cb;
-		while (parentClass.parent != null) {
-			parentClass = (ClassBinding) SymbolTableVisitor.symbolTable.get(
-					parentClass.parent);
-			numFields += parentClass.fieldList.size();
-		}
+//		ClassBinding parentClass = cb;
+//		while (parentClass.parent != null) {
+//			parentClass = (ClassBinding) SymbolTableVisitor.symbolTable.get(
+//					parentClass.parent);
+//			numFields += parentClass.fieldList.size();
+//		}
 		
 		return numFields;
 	}
@@ -196,46 +162,79 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 		return null;
 	}
 
+//	public LazyIRTree visit(syntax.MainClass n) {
+//		
+//		/* Add name of main class to labels */
+//		currClass = n.i1.toString();
+//		currMethod = "main";
+//
+////		String methodPrefix = currClass + "$" + currMethod;
+//		tree.NameOfLabel prelude = new tree.NameOfLabel(currClass, currMethod, 
+//				"preludeEnd");
+////		tree.NameOfLabel epilog = new tree.NameOfLabel(currClass, currMethod,
+////				"epilogBegin");
+//		epilog = new tree.NameOfLabel(currClass, currMethod,
+//				"epilogBegin");
+//		tree.Stm pre = new tree.LABEL(prelude);
+//		tree.Stm post = new tree.JUMP(epilog);
+//		
+//		tree.Stm s = n.s.accept(this).asStm();
+//
+//		tree.Stm seq = new tree.SEQ(pre, new tree.SEQ(s, post));
+//		
+//		methodFragments.add(seq);
+//		
+//		/* Don't need to do this, just for completion's sake */
+//		currMethod = null;
+//		currClass = null;
+//		
+//		return null;
+//	}
+
 	@Override
 	public LazyIRTree visit(syntax.MainClass n) {
 		
 		/* Add name of main class to labels */
-		currClass = n.i1.toString();
-		currMethod = "main";
-
-//		String methodPrefix = currClass + "$" + currMethod;
-		tree.NameOfLabel prelude = new tree.NameOfLabel(currClass, currMethod, 
-				"preludeEnd");
-//		tree.NameOfLabel epilog = new tree.NameOfLabel(currClass, currMethod,
-//				"epilogBegin");
-		epilog = new tree.NameOfLabel(currClass, currMethod,
-				"epilogBegin");
-		tree.Stm pre = new tree.LABEL(prelude);
-		tree.Stm post = new tree.JUMP(epilog);
+		String nameOfMain = n.i1.toString() + "$" + "main";
+		tree.NameOfLabel mainLabel = new tree.NameOfLabel(nameOfMain);
+//		tree.NameOfLabel classLabel = new tree.NameOfLabel(n.i1.toString());
+//		tree.NameOfLabel mainLabel = new tree.NameOfLabel(n.i2.toString());
 		
+		// Function prelude and epilog
+		tree.NameOfLabel prelude = new tree.NameOfLabel(nameOfMain, "preludeEnd");
+		
+		tree.NameOfLabel epilog = new tree.NameOfLabel(nameOfMain, "epilogBegin");
+		
+		tree.Stm pre = new tree.LABEL(prelude);
+		tree.Stm post = new tree.LABEL(epilog);
+		
+		// Allocate frame with no args or locals
+		ArrayList<Symbol> args = new ArrayList<Symbol>();
+		currFrame = new Sparc.SparcFrame(nameOfMain, args);
+				
 		tree.Stm s = n.s.accept(this).asStm();
-
+		
 		tree.Stm seq = new tree.SEQ(pre, new tree.SEQ(s, post));
 		
-		methodFragments.add(seq);
+		MethodFragment mf = new MethodFragment(mainLabel, currFrame, seq);
 		
-		/* Don't need to do this, just for completion's sake */
-		currMethod = null;
-		currClass = null;
+		methodFragments.add(mf);
+		
+		currFrame = null;
 		
 		return null;
 	}
-
+	
 	@Override
 	public LazyIRTree visit(syntax.SimpleClassDecl n) {
 		// Need to go through here to get to methods
 		// Generate new fragments from methods
 		
-		currClass = n.i.toString();
+		currClassKey = Symbol.symbol(n.i.toString());
 		
 		for (syntax.MethodDecl m: n.methods) m.accept(this);
 		
-		currClass = null;
+		currClassKey = null;
 		
 		return null;
 	}
@@ -245,40 +244,73 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 		// Need to go through here to get methods
 		// Generate new fragments from methods
 		
-		currClass = n.i.toString();
+		currClassKey = Symbol.symbol(n.i.toString());
 		
 		for (syntax.MethodDecl m: n.methods) m.accept(this);
 		
-		currClass = null;
+		currClassKey = null;
 		
 		return null;
 	}
 
 	@Override
 	public LazyIRTree visit(syntax.MethodDecl n) {
-		// Generate new method fragment from statements
-		currMethod = n.i.toString();
 		
-		String methodPrefix = currClass + "$" + currMethod;
+		// Set "while" counter to '0'
+		whileCounter = 0;
+		
+		// Generate new method fragment from statements
+		currMethodKey = Symbol.symbol(n.i.toString());
+		
+		String methodName = currClassKey.toString() + "$" + currMethodKey.toString();
+		tree.NameOfLabel methodNameLabel = tree.NameOfLabel.generateLabel(methodName);
+		
+		String methodPrefix = currClassKey.toString() + "$" + currMethodKey.toString();
 		tree.Stm pre = new tree.LABEL(methodPrefix + "$preludeEnd");
 		tree.Stm post = new tree.JUMP(methodPrefix + "$epilogBegin");
 		
+		// Lookup binding in symbol table
+		ClassBinding cb = (ClassBinding) SymbolTableVisitor.symbolTable.get(currClassKey);
+		MethodBinding mb = (MethodBinding) cb.methods.get(currMethodKey);
+		
+		// Allocate new frame for method
+		ArrayList<Symbol> methodArgs = mb.paramList;
+		
+		// prepend "this" pointer to params list
+		Symbol thisPointer = Symbol.symbol("this");
+		methodArgs.add(0, thisPointer);
+		
+		currFrame = new Sparc.SparcFrame(methodName, mb.paramList);
+		
+		// Add locals to frame
+		for (Symbol l: mb.localList) {
+			currFrame.allocLocal(l);
+		}
+		
+
 		// Get the number of statements in method 
 		final int l = n.sl.size();
 		
 		// if there are no statements, just generate label and 
 		// jump statement
+		tree.Stm body;
+		
+
 		if (l == 0) {			
-			tree.Stm seq = new tree.SEQ(pre, post);
-			methodFragments.add(seq);
+			tree.Stm returnStm = new tree.MOVE(currFrame.RV(), 
+					n.e.accept(this).asExp());
+			body = new tree.SEQ(pre, new tree.SEQ(returnStm, post));
 		}
 		
 		// If there is only one statement, dive in to get it, then
 		// add post statement at end
 		else if ( l == 1 ) {
 			tree.Stm s = n.sl.get(0).accept(this).asStm();
-			tree.Stm seq = new tree.SEQ(pre, new tree.SEQ(s, post));
-			methodFragments.add(seq);
+			// Get the return Expression and move to register %i0
+			tree.Stm returnStm = new tree.MOVE(currFrame.RV(), 
+								n.e.accept(this).asExp());
+			body = new tree.SEQ(s, returnStm);
+			body= new tree.SEQ(pre, new tree.SEQ(body, post));
 		}
 		
 		// If there are more then one statements, that's where
@@ -288,18 +320,29 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 			tree.Stm s1 = n.sl.get(l-2).accept(this).asStm();
 			tree.Stm s2 = n.sl.get(l-1).accept(this).asStm();
 			
-			tree.Stm seq = new tree.SEQ(s1, s2);
+			body = new tree.SEQ(s1, s2);
 			
+	
 			for (int i = l-3; i >=0; i--) {
 				tree.Stm s = n.sl.get(i).accept(this).asStm();
-				seq = new tree.SEQ(s, seq);
+				body = new tree.SEQ(s, body);
 			}
 			
-			tree.Stm endSeq = new tree.SEQ(pre, new tree.SEQ(seq, post));
-			methodFragments.add(endSeq);
+			// Get the return Expression and move to register %i0
+			tree.Stm returnStm = new tree.MOVE(currFrame.RV(), 
+					n.e.accept(this).asExp());
+			
+			body = new tree.SEQ(body, returnStm);
+			body = new tree.SEQ(pre, new tree.SEQ(body, post));
 		} 
 		
-		currMethod = null;
+		
+		
+		MethodFragment mf = new MethodFragment(methodNameLabel, currFrame, body);
+		methodFragments.add(mf);
+		
+		currFrame = null;
+		currMethodKey = null;
 		
 		return null;
 	}
@@ -404,9 +447,12 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 //		tree.LABEL body = new tree.LABEL("body");
 //		tree.LABEL done = new tree.LABEL("done");
 		
-		tree.NameOfLabel test = new tree.NameOfLabel("while", "test");
-		tree.NameOfLabel body = new tree.NameOfLabel("while", "body");
-		tree.NameOfLabel done = new tree.NameOfLabel("while", "done");
+		String condNumberLabel = String.format(
+				"%03d", whileCounter);
+		
+		tree.NameOfLabel test = new tree.NameOfLabel("while", "test" + condNumberLabel);
+		tree.NameOfLabel body = new tree.NameOfLabel("while", "body" + condNumberLabel);
+		tree.NameOfLabel done = new tree.NameOfLabel("while", "done" + condNumberLabel);
 		
 		LazyIRTree cond = n.e.accept(this);
 		
@@ -420,6 +466,7 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 					new tree.LABEL(done)
 				);
 		
+		whileCounter++;
 		return new StmIRTree(seq);
 	}
 
@@ -478,7 +525,7 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 									new tree.BINOP(tree.BINOP.PLUS,
 											index,
 											tree.CONST.ONE),
-									new tree.CONST(wordSize)
+									new tree.CONST(currFrame.getWordSize())
 									))
 									);
 		
@@ -493,10 +540,11 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 		
 		// Put it all together
 		tree.NameOfLabel contAssign = new tree.NameOfLabel("array", "assign");
-		tree.Stm assignStm = tree.SEQ.fromList(indexCheckSeq,
-				new tree.LABEL(contAssign), memAssignStm);
+//		tree.Stm assignStm = tree.SEQ.fromList(indexCheckSeq,
+//				new tree.LABEL(contAssign), memAssignStm);
 		
-		return new StmIRTree(assignStm);
+//		return new StmIRTree(assignStm);
+		return new StmIRTree(memAssignStm);
 	}
 
 	@Override
@@ -550,7 +598,7 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 						arrayPtr,
 						new tree.BINOP(tree.BINOP.MUL,
 						new tree.BINOP(tree.BINOP.PLUS, index, tree.CONST.ONE),
-						new tree.CONST(wordSize))
+						new tree.CONST(currFrame.getWordSize()))
 					)
 				));
 	}
@@ -571,14 +619,24 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 	public LazyIRTree visit(syntax.Call n) {
 	
 		// Get name label for method
-		String name = n.i.toString();
+		String methodName = n.i.toString();
+		Symbol methodKey = Symbol.symbol(methodName);
 		
+
 		// get name label for object calling method
 		// (should be passed up with LazyIRTree reference)
 		LazyIRTree objExp = n.e.accept(this);
 		String className = objExp.getName();
+		Symbol classKey = Symbol.symbol(className);
+		ClassBinding thisClass = (ClassBinding) SymbolTableVisitor.symbolTable.get(classKey);
+		
+		// Lookup method in symbol table 
+		Symbol ownerKey = SymbolTableUtils.searchForMethod(methodKey, thisClass);
+		ClassBinding ownerClass = (ClassBinding) SymbolTableVisitor.symbolTable.get(ownerKey);
+		
+		tree.NameOfLabel methodLabel = new tree.NameOfLabel(ownerKey.toString(), methodName);
 				
-		tree.NAME func = new tree.NAME(className + "$" + name);
+		tree.NAME func = new tree.NAME(methodLabel);
 		
 		// Initialize list of expressions to be passed to the call
 		// as arguments
@@ -594,6 +652,20 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 		
 		// Initialize call expression and pass it up the tree
 		tree.CALL call = new tree.CALL(func, l);
+		
+		// If function returns an object type, return the name of that object
+		MethodBinding mb = (MethodBinding) ownerClass.methods.get(methodKey);
+		
+		if (mb.rtype instanceof syntax.IdentifierType) {
+			return new ExpIRTree(call, mb.rtype.toString());
+		}
+		
+		// Compare with the maximum number of arguments called in parent
+		// function. If the number of arguments for this call is greater
+		// than any other in the parent function, set as new max args
+		int currMaxArgs = currFrame.getMaxArgs();
+		if (currMaxArgs < n.el.size() + 1) 
+			currFrame.setMaxArgs(n.el.size());
 		
 		return new ExpIRTree(call);
 	}
@@ -623,8 +695,8 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 //		String objName = n.toString();
 		
 		// Lookup object "Type" in symbol table
-		VarBinding idBinding = (VarBinding) SymbolTableLookup.searchScope(key,
-				currClass, currMethod);
+		VarBinding idBinding = (VarBinding) SymbolTableUtils.searchScope(key,
+				currClassKey.toString(), currMethodKey.toString());
 		String objName = idBinding.toString();
 		
 		return new ExpIRTree(lookupVar(key), objName);
@@ -634,8 +706,9 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 	public LazyIRTree visit(syntax.This n) {
 		// Return reference to first register
 		// (holds reference to current class object)
-		String objName = currClass;
-		return new ExpIRTree(new tree.TEMP("%i0"), objName);
+		String objName = currClassKey.toString();
+		Symbol lookUpKey = Symbol.symbol("this");
+		return new ExpIRTree(currFrame.lookupVar(lookUpKey), objName);
 	}
 
 	@Override
@@ -652,7 +725,7 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 		tree.Exp bytesToAlloc = new tree.BINOP(
 				tree.BINOP.MUL,
 				new tree.BINOP(tree.BINOP.PLUS, arraySize, tree.CONST.ONE),
-				new tree.CONST(wordSize));
+				new tree.CONST(currFrame.getWordSize()));
 				
 		return new ExpIRTree(new tree.CALL(name, bytesToAlloc));
 	}
@@ -671,8 +744,8 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 		
 		tree.Exp bytesToAlloc = new tree.BINOP(
 				tree.BINOP.MUL,
-				new tree.CONST(size),
-				new tree.CONST(wordSize));
+				new tree.CONST(size + 1),
+				new tree.CONST(currFrame.getWordSize()));
 		
 		return new ExpIRTree(new tree.CALL(name, bytesToAlloc), objName);
 	}
@@ -704,6 +777,7 @@ abstract class LazyIRTree {
 
 class ExpIRTree extends LazyIRTree {
 	private String objectName;
+//	private String objectNamel
 	private final tree.Exp exp;
 	ExpIRTree (tree.Exp e) { exp = e; }
 	ExpIRTree (tree.Exp e, String name) { exp = e; objectName = name; }
@@ -722,6 +796,7 @@ class ExpIRTree extends LazyIRTree {
 	}
 	
 	public void passName(String n) {
+//		objectName = n;
 		objectName = n;
 	}
 	
@@ -780,12 +855,13 @@ class BoolExp extends LazyIRTree {
 
 class IfThenElseExp extends LazyIRTree {
 	private final LazyIRTree cond, e2, e3;
+	private static int conditionCounter = 0;
 //	final tree.LABEL t = new tree.LABEL("if", "then");
 //	final tree.LABEL f = new tree.LABEL("if", "else");
 //	final tree.LABEL join = new tree.LABEL("if", "end");
-	tree.NameOfLabel truthLabel = new tree.NameOfLabel("if", "then");
-	tree.NameOfLabel falseLabel = new tree.NameOfLabel("if", "else");
-	tree.NameOfLabel joinLabel = new tree.NameOfLabel("if", "end");		
+	tree.NameOfLabel truthLabelTemplate = new tree.NameOfLabel("if", "then");
+	tree.NameOfLabel falseLabelTemplate = new tree.NameOfLabel("if", "else");
+	tree.NameOfLabel joinLabelTemplate = new tree.NameOfLabel("if", "end");		
 	
 	IfThenElseExp (final LazyIRTree c, final LazyIRTree thenClause, final LazyIRTree elseClause) {
 //		assert cond != null; assert e2 != null;
@@ -800,7 +876,22 @@ class IfThenElseExp extends LazyIRTree {
 	
 	// if-then-else statement as a statement
 	public tree.Stm asStm() {
+		
+		String condNumberLabel = String.format(
+				"%03d", conditionCounter);
+		
+		tree.NameOfLabel truthLabel = new tree.NameOfLabel(
+				truthLabelTemplate.toString() + condNumberLabel);
+		
+		tree.NameOfLabel falseLabel = new tree.NameOfLabel(
+				falseLabelTemplate.toString() + condNumberLabel);
+		
+		tree.NameOfLabel joinLabel = new tree.NameOfLabel(
+				joinLabelTemplate.toString() + condNumberLabel);
+		conditionCounter++;
+		
 		final tree.Stm seq;
+		
 		if (e3 == null) {
 			seq = tree.SEQ.fromList(		
 					cond.asCond(truthLabel, falseLabel),		
@@ -824,7 +915,21 @@ class IfThenElseExp extends LazyIRTree {
 	
 	public tree.Stm asCond(tree.NameOfLabel tt, tree.NameOfLabel ff) { 
 		final tree.Stm seq;
+		
+		String condNumberLabel = String.format(
+				"%03d", conditionCounter);
+		
+		tree.NameOfLabel truthLabel = new tree.NameOfLabel(
+				truthLabelTemplate.toString(), condNumberLabel);
+		
+		tree.NameOfLabel falseLabel = new tree.NameOfLabel(
+				falseLabelTemplate.toString(), condNumberLabel);
+		
+		conditionCounter++;
+		
 		if (e3 == null) {
+			
+	
 			seq = tree.SEQ.fromList(
 					cond.asCond(truthLabel, falseLabel),
 					new tree.LABEL(truthLabel),	// T:
@@ -864,6 +969,7 @@ class IfThenElseExp extends LazyIRTree {
 
 class LessThanExp extends LazyIRTree {
 	
+	private int conditionCounter;
 	private final LazyIRTree exp1, exp2;
 	
 	LessThanExp(LazyIRTree e1, LazyIRTree e2) {
@@ -883,38 +989,48 @@ class LessThanExp extends LazyIRTree {
 //		tree.LABEL join = new tree.LABEL("join");
 //		
 		/* Create temporary for register we are going to store value in */
-		tree.TEMP storeRegister = new tree.TEMP("local7");
+		tree.TEMP storeRegister = tree.TEMP.generateTEMP("%TEMP");
+		
+		String condNumberLabel = String.format(
+				"%03d", conditionCounter);
 		
 		tree.Stm seq = tree.SEQ.fromList(
 				new tree.CJUMP(tree.CJUMP.LT, 
 							   exp1.asExp(),
 							   exp2.asExp(),
-							   new tree.NameOfLabel("Get_ONE"),
-							   new tree.NameOfLabel("Get_ZERO")),
-				new tree.LABEL("Get_ONE"),
+							   new tree.NameOfLabel("Get_ONE" + condNumberLabel),
+							   new tree.NameOfLabel("Get_ZERO" + condNumberLabel)),
+				new tree.LABEL("Get_ONE" + condNumberLabel),
 				new tree.MOVE(storeRegister, tree.CONST.ONE),
-				new tree.JUMP("join"),
-				new tree.LABEL("Get_ZERO"),
+				new tree.JUMP("join" + condNumberLabel),
+				new tree.LABEL("Get_ZERO" + condNumberLabel),
 				new tree.MOVE(storeRegister, tree.CONST.ZERO),
-				new tree.LABEL("join")
+				new tree.LABEL("join" + condNumberLabel)
 				);
+		
+		conditionCounter++;
 		
 		return new tree.RET(seq, storeRegister);
 	}
 	
 	public tree.Stm asStm() {
 
+		String condNumberLabel = String.format(
+				"%03d", conditionCounter);
+		conditionCounter++;
+		
 		return tree.SEQ.fromList(
 				new tree.CJUMP(tree.CJUMP.LT, 
 							   exp1.asExp(),
 							   exp2.asExp(),
-							   new tree.NameOfLabel("Get_ONE"),
-							   new tree.NameOfLabel("Get_ZERO")),
-				new tree.LABEL("Get_ONE"),
-				new tree.JUMP("join"),
-				new tree.LABEL("Get_ZERO"),
-				new tree.LABEL("join")
-				);
+							   new tree.NameOfLabel("Get_ONE" + condNumberLabel),
+							   new tree.NameOfLabel("Get_ZERO" + condNumberLabel)),
+				new tree.LABEL("Get_ONE" + condNumberLabel),
+				new tree.JUMP("join" + condNumberLabel),
+				new tree.LABEL("Get_ZERO" + condNumberLabel),
+				new tree.LABEL("join" + condNumberLabel)
+				);		
+
 	}
 	
 	public tree.Stm asCond(tree.NameOfLabel truthLabel, tree.NameOfLabel falseLabel) {
@@ -1028,8 +1144,6 @@ class UnsupportedException extends Exception {
 		super(s);
 	}
 }
-
-
 
 //class BinopExp extends LazyIRTree {
 //	final int b;

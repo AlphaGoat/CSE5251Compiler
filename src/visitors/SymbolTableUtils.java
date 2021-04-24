@@ -1,9 +1,61 @@
-package main;
+package visitors;
 
-public class SymbolTableLookup {
+import java.util.ArrayList;
 
-	public SymbolTableLookup() {
-		// TODO Auto-generated constructor stub
+import main.Symbol;
+
+public class SymbolTableUtils {
+
+	public SymbolTableUtils() {
+		
+	}
+	
+	// Given a class binding, build up inheritance stack
+	public static ArrayList<Symbol> buildInheritanceStack(Symbol key) {
+		// Build the inheritance stack of a given class
+		ArrayList<Symbol> inheritanceStack = new ArrayList<Symbol>();
+		inheritanceStack.add(key);
+		Binding b;
+		ClassBinding cb = (ClassBinding) SymbolTableVisitor.symbolTable.get(key);
+		int curr_index = 0;
+		while ( cb.parent != null ) {
+			
+			if ( (b = SymbolTableVisitor.symbolTable.get(cb.parent)) == null ) {
+				break;
+			}
+			
+//			ClassBinding next = (ClassBinding) SymbolTableVisitor.symbolTable.get(cb.parent);
+			ClassBinding next = (ClassBinding) b;
+			if ( inheritanceStack.indexOf(next.name) < curr_index 
+					&& inheritanceStack.indexOf(next.name) > -1) {
+				break;
+			}
+			inheritanceStack.add(next.name);
+			cb = next;
+			curr_index++;
+		}
+		
+		return inheritanceStack;		
+	}
+	
+	public static Symbol searchForMethod(Symbol methodKey, ClassBinding cb) {
+		// Given a method key, search for the class that contains it and return
+		// it's key
+		
+		/* First perform search in current class */
+		if (cb.methods.get(methodKey) != null) {
+			return cb.name;
+		}
+		else {
+			ArrayList<Symbol> inheritStack = buildInheritanceStack(cb.name);
+			for (int i = 0; i < inheritStack.size(); i++) {
+				ClassBinding currBind = (ClassBinding) SymbolTableVisitor.symbolTable.get(inheritStack.get(i));
+				if (currBind.methods.get(methodKey) != null) {
+					return currBind.name;
+				}
+			}
+		}
+		return null;
 	}
 	
 	public static Binding searchScope(Symbol key, String currClassName,

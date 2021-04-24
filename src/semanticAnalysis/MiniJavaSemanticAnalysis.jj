@@ -11,6 +11,7 @@ import java.io.FileReader;
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.ArrayList;
+import errors.ParseErrorMsg;
 
 public class MiniJavaSemanticAnalyzer {
 
@@ -120,7 +121,8 @@ syntax.Program Start() :
 	main = Main() ( c = Class() { classes.add(c); } )*
 	
     } catch (ParseException e) {
-      
+
+    ParseErrorMsg.complain(e.getMessage());
 //	System.err.println(e.getMessage());
 	main = null;
 	c = null;
@@ -146,6 +148,7 @@ syntax.MainClass Main() :
 
     } catch (ParseException e) {
 //		System.err.println(e.getMessage());
+		ParseErrorMsg.complain(e.getMessage());
 		error_skipto(new Token(RBRACK, "}"));
 		name = null;
 		arg = null;
@@ -166,6 +169,7 @@ syntax.ClassDecl Class() :
     | c = SimpleClass()
   )
   } catch (ParseException e) {
+    ParseErrorMsg.complain(e.getMessage());
 //    System.err.println(e.getMessage());
     c = null; // Dummy declaration
   }
@@ -191,6 +195,7 @@ syntax.SimpleClassDecl SimpleClass() :
     
     } catch (ParseException ex) {
 //		System.err.println(ex.getMessage());
+		ParseErrorMsg.complain(ex.getMessage());
 		error_skipto(new Token(RBRACK,"}"));		
 		cName = null;
 		fields = null;
@@ -220,6 +225,7 @@ syntax.ExtendingClassDecl ExtendingClass() :
     
     } catch (ParseException ex) {
 //		System.err.println(ex.getMessage());
+		ParseErrorMsg.complain(ex.getMessage());
 		error_skipto(new Token(RBRACK, "}"));
 		cName = null;
 		exName = null;
@@ -241,6 +247,7 @@ syntax.IdentifierDecl Var(String varType) :
 	try {
 		at = TypeProd() t = <ID> { ai = new syntax.Identifier(t.beginLine, t.beginColumn, t.image); } ";"
 	} catch (ParseException e) {
+	  	ParseErrorMsg.complain(e.getMessage());
 //	  	System.err.println(e.getMessage());
 		error_skipto(new Token(SEMI, ";"));
 		at = null;
@@ -264,6 +271,7 @@ syntax.Type TypeProd() :
     )
  
   } catch (ParseException e) {
+    	ParseErrorMsg.complain(e.getMessage());
 //    System.err.println(e.getMessage());
     ret = null;
   }
@@ -302,6 +310,7 @@ syntax.MethodDecl Method() :
   
     } catch (ParseException e) {
 //		System.err.println(e.getMessage());
+		ParseErrorMsg.complain(e.getMessage());
 		error_skipto(new Token(RBRACK, "}"));
 		rType = null;
 		mName = null;
@@ -335,6 +344,7 @@ syntax.Statement Stm() :
 	}
 
 	catch(ParseException e) {
+	  ParseErrorMsg.complain(e.getMessage());
 //	    System.err.println(e.getMessage());
 //	    error_skipto(new Token(SEMI, ";"));
 	    as = null;
@@ -358,6 +368,7 @@ syntax.ArrayAssign ArrayAssignStm()  :
   
     } catch(ParseException em) {
 //        System.err.println(em.getMessage());
+		ParseErrorMsg.complain(em.getMessage());
 		error_skipto(new Token(SEMI, ";"));
 		t = new Token(ID); 
 		nameOfArray = null;
@@ -381,6 +392,7 @@ syntax.Print PrintStm() :
           )      
     } catch(ParseException e) {
 //        System.err.println(e.getMessage());
+		ParseErrorMsg.complain(e.getMessage());
 		error_skipto(new Token(SEMI, ";"));
 		t = new Token(PRINT);
 		ae = null; 
@@ -404,6 +416,7 @@ syntax.Assign AssignStm() :
           
     } catch(ParseException e) {
 //        System.err.println(e.getMessage());
+		ParseErrorMsg.complain(e.getMessage());
         error_skipto(new Token(SEMI, ";"));
         t = new Token(ID);
         ai = null;
@@ -431,6 +444,7 @@ syntax.If IfStm() :
         
     } catch(ParseException e) {
 //	System.err.println(e.getMessage());
+		ParseErrorMsg.complain(e.getMessage());
         error_skipto(new Token(SEMI, ";"));
         t = new Token(IF);
         ae = null;
@@ -456,6 +470,7 @@ syntax.While WhileStm() :
         
     } catch (ParseException e) {
 //		System.err.println(e.getMessage());
+		ParseErrorMsg.complain(e.getMessage());
 		error_skipto(new Token(SEMI, ";"));
 		t = new Token(WHILE);
 		ae = null;
@@ -481,6 +496,7 @@ syntax.Block BracketedStm() :
     
   } catch (ParseException e) {
 //      System.err.println(e.getMessage());
+	  ParseErrorMsg.complain(e.getMessage());
       error_skipto(new Token(RBRACK, "}"));
       t = new Token(LBRACK);
       sl = null; 
@@ -508,6 +524,7 @@ syntax.Expression Exp() :
 	
 	
     } catch (ParseException ex) {
+      	ParseErrorMsg.complain(ex.getMessage());
 //		System.err.println(ex.getMessage());
 		re = null;
     }
@@ -536,6 +553,7 @@ syntax.Expression ExpPrime(syntax.Expression e) :
 	)?
 	
     } catch (ParseException ex) {
+      	ParseErrorMsg.complain(ex.getMessage());
 //		System.err.println(ex.getMessage());
 		re = null;
     }
@@ -551,6 +569,7 @@ syntax.Expression Term() :
 
 	
     } catch(ParseException e) {
+      	ParseErrorMsg.complain(e.getMessage());
 //    	System.err.println(e.getMessage());
     	re = null;
     }
@@ -568,6 +587,7 @@ syntax.Expression TermPrime(syntax.Expression e) :
        ( "*" ae = Factor() { re = new syntax.Times(e.lineNumber, e.columnNumber, e, ae); } re = TermPrime(re) )? // Multiplication Expression
               
     } catch (ParseException em) {
+      	ParseErrorMsg.complain(em.getMessage());
 //       System.err.println(em.getMessage());
     }
     
@@ -582,6 +602,7 @@ syntax.Expression Factor() :
 	( re = Relation() re = FactorPrime(re) )
 	
     } catch(ParseException e) {
+      	ParseErrorMsg.complain(e.getMessage());
 //		System.err.println(e.getMessage());
 		re = null;
     }
@@ -602,6 +623,7 @@ syntax.Expression FactorPrime(syntax.Expression e) :
 
 	
     } catch(ParseException em) {
+      	ParseErrorMsg.complain(em.getMessage());
 //		System.err.println(em.getMessage());
     }
     
@@ -639,6 +661,7 @@ syntax.Expression Relation() :
 	
     } catch(ParseException e) {
 //		System.err.println(e.getMessage());
+		ParseErrorMsg.complain(e.getMessage());
 		re = null;
     }
     
@@ -669,15 +692,26 @@ void error_skipto(Token expected) {
 	//  https://www.cs.purdue.edu/homes/hosking/javacc/doc/errorrecovery.html
      Token t;
 	 do {
+	   try { 
 	    t = getNextToken();
 	      try { 
      	  	if (t.kind == EOF) {
+    
        			throw new ParseException();
        		}
      	 } catch (ParseException e) {
+     	   ParseErrorMsg.complain(t.beginLine, t.beginColumn,
+     	   "Expecting a '%s'. Reached end of file while parsing.\n");
 //     	    System.err.Printf("%s:%d.%d: Syntax Error -- Expecting a '%s'. Reached end of file while parsing.\n",
 //       		e.filename, t.beginLine, t.beginColumn, expected.toString());
        		break;
      	}
+    } catch (TokenMgrError e) {
+        ParseErrorMsg.complain("Expecting a '%s'. Reached end of file while parsing.\n",
+        false);
+//     	    System.err.Printf("%s:%d.%d: Syntax Error -- Expecting a '%s'. Reached end of file while parsing.\n",
+//       		e.filename, t.beginLine, t.beginColumn, expected.toString());
+       		break;
+       }
     } while (t.kind != expected.kind);
 }

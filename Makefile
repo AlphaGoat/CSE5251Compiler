@@ -5,14 +5,16 @@ GRAMMARDIR := semanticAnalysis
 
 default : compiler
 
-compiler : translate.jar
+compiler : compile.jar
 
 # options: c--create; f--name of jar file; e--entry point
-translate.jar :
+compile.jar :
 	$(JAVACC) -OUTPUT_DIRECTORY=$(GRAMMARDIR) semanticAnalysis/*.jj
 	$(JAVAC) -classpath .:$(SUPPORT) */*.java
-	jar cvmf COMPILEPLS.MF translate.jar semanticAnalysis/*.class main/*.class errors/*.class
+	jar cvmf COMPILEPLS.MF compile.jar */*.class	
+	sparc-linux-gcc -c runtime.c -o runtime.o
+	chmod u+x compile.sh
 
 clean :
-	/bin/rm -f translate.jar
+	/bin/rm -f compile.jar
 	/bin/rm -f */*.class

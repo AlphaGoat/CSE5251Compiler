@@ -1,6 +1,7 @@
 package main;
 
 import java.io.PrintWriter;
+import java.io.File;
 
 // TODO: Just add parent class fields to child when making symbol table.
 // 		 Makes lookups easier, and there is functionally no difference
@@ -8,10 +9,18 @@ import java.io.PrintWriter;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.List;
 
 import errors.ParseErrorMsg;
 import errors.SemanticErrorMsg;
+import visitors.LazyIRTreeVisitor;
+import visitors.SymbolTableVisitor;
+import visitors.TypeCheckVisitor;
 import errors.LexicalErrorMsg;
 
 public class Compiler { 
@@ -28,7 +37,7 @@ public class Compiler {
 		
 		/* Set Parser flags */
 		boolean verbose = false;
-		
+
 		if (args.length == 0) {
 			System.out.println("ERROR: Parser requires at least one input argument (path to file to parse)");
 			return;
@@ -39,12 +48,6 @@ public class Compiler {
 		for (int i = 0; i < args.length; i++) {
 			if (args[i].equals("--verbose")) {
 				verbose = true;
-	//			try {
-	//				FileOutputStream f = new FileOutputStream("debug.txt");
-	//				System.setOut(new PrintStream(f));
-	//			} catch (FileNotFoundException e) {
-	//				System.out.println(e.toString());
-	//			}
 				continue;
 			}
 			else if (args[i].equals("--help")) {
@@ -61,16 +64,14 @@ public class Compiler {
 		}
 		
 		for (String f: filenameList) {
-			int num_errors = compile(f, false);
+			int num_errors = compile(f, verbose);
 		}
 				
 	}
 		
 	public static int compile(String f, boolean verbose) {
 		
-//		for (int i = 0; i < filenameList.size(); i++) {
 		filename = f;
-		syntax.Program program;
 		
 		// Reinitialize Error Handlers
 		
@@ -78,66 +79,50 @@ public class Compiler {
 		ParseErrorMsg.reInit();
 		SemanticErrorMsg.reInit();
 
-//		filename = filenameList.get(i);
 		try {
 
-//			Lexer.LexicalScanner scanner = new Lexer.LexicalScanner(new FileInputStream(filename));
-			
-//			semanticAnalysis.MiniJavaSemanticAnalyzer scanner = new semanticAnalysis.MiniJavaSemanticAnalyzer(
-//					new FileInputStream)
-			
-			semanticAnalysis.MiniJavaSemanticAnalyzer semanticsObject = new semanticAnalysis.MiniJavaSemanticAnalyzer(
+			semanticAnalysis.MiniJavaSemanticAnalyzer grammarParser = new semanticAnalysis.MiniJavaSemanticAnalyzer(
 					new FileInputStream(filename));
 			
 			if (verbose) {
-				semanticsObject.enable_tracing();
+				grammarParser.enable_tracing();
 			}
 			else {
-				semanticsObject.disable_tracing();
+				grammarParser.disable_tracing();
 			}
 			
 			/* First perform lexical scanning of input file */	
-			LexicalScan.performScan(semanticsObject);
-//				if (LexicalScan.num_lexical_errors > 0) {
-//					System.exit(1);
-//				}
+			LexicalScan.performScan(grammarParser);
 			
-			semanticsObject.ReInit(new FileInputStream(filename));
-							
-//			if (verbose) {
-//				semanticsObject.enable_tracing();
-//			}
-//			else {
-//				semanticsObject.disable_tracing();
-//			}
-//			
+			grammarParser.ReInit(new FileInputStream(filename));
+
 			/* Next try parsing */
 			// Gotta initialize this to zero for parsing error
 			// count to be right at end
 			int num_errors;
+			syntax.Program program;
 			try {
-				program = semanticsObject.Start();
+				program = grammarParser.Start();
 			} catch (semanticAnalysis.ParseException e) {
-				System.err.printf(e.toString());
+//				System.err.printf(e.toString());
+				ParseErrorMsg.complain(e.getMessage());
 				num_errors = LexicalScan.num_lexical_errors;
-				num_errors += semanticAnalysis.ParseException.getCount();
+				num_errors += ParseErrorMsg.getCount();
+//				num_errors += semanticAnalysis.ParseException.getCount();
 				return num_errors;
 			}
 			
+			// If syntax errors are reported, stop compiler and print number of errors
 			int total_lex_syntax_errors = ParseErrorMsg.getCount() + LexicalErrorMsg.getCount();
 			if ( total_lex_syntax_errors > 0 ) {
 				System.out.printf("%s, errors=%d\n", filename, total_lex_syntax_errors);
 				return total_lex_syntax_errors;
 			}
-			
-			// With abstract syntax tree, visit nodes and identify semantics errors
-//				syntax.PrettyPrint pp = new syntax.PrettyPrint();
-//				pp.visit(program);
-			
+
 			// Set up symbol table
 			SymbolTableVisitor sb = new SymbolTableVisitor();
 			sb.visit(program);
-//				sb.printTable();
+			sb.addFieldsToChild(); // Adds parent fields to child classes. Makes things easier later on
 			
 			// Perform semantic analysis
 			TypeCheckVisitor tv = new TypeCheckVisitor();
@@ -150,31 +135,193 @@ public class Compiler {
 			}
 			
 			num_errors = errors.SemanticErrorMsg.getCount();
-			System.out.printf("%s, errors=%d\n", filename, num_errors);
-			
-			if (num_errors > 0) {
-				return num_errors;
-			}
-			
+						
 			// Construct method fragments
-			int wordCount = 4;
-			LazyIRTreeVisitor lazy = new LazyIRTreeVisitor(wordCount);
+			LazyIRTreeVisitor lazy = new LazyIRTreeVisitor();
 			lazy.visit(program);
 			
-			PrintWriter writer = new PrintWriter(System.out);
-			
-			// print out function fragments in IR Tree
-			for (tree.Stm fragment: lazy.methodFragments) {
-				tree.TreePrint.print(writer, fragment);
+			// Print to debug file
+			PrintWriter writer; 
+			File debugFile = new File("/home/alphagoat/eclipse-workspace/MiniJavaCompiler/logs/log.txt");
+//			if (verbose) {
+//				try {
+//					debugFile.createNewFile();				
+//					FileOutputStream debugFileStream = new FileOutputStream(debugFile);
+//					PrintStream printStream = new PrintStream(debugFileStream);
+//					writer = new PrintWriter(printStream);
+//					
+//	//				 print out function fragments in IR Tree
+//					for (visitors.MethodFragment fragment: lazy.methodFragments) {
+//						tree.Stm body = fragment.getBody();
+//						tree.TreePrint.print(writer, body);
+//					}
+//				} catch (IOException e) {
+//					;
+//				}
+//			}
+
+			List<Sparc.SparcFrame> frameList = new ArrayList<Sparc.SparcFrame>();
+			ArrayList<List<tree.Stm>> methodTraces = new ArrayList<List<tree.Stm>>();
+			// Canonicalize method fragments
+			for (visitors.MethodFragment fragment: lazy.methodFragments) {
+				tree.Stm body = fragment.getBody();
+				methodTraces.add(canon.Main.transform(body));
+				frameList.add((Sparc.SparcFrame) fragment.getMethodFrame());
 			}
+			
+			if (verbose) {
+				try {
+					debugFile.createNewFile();				
+					FileOutputStream debugFileStream = new FileOutputStream(debugFile);
+					PrintStream printStream = new PrintStream(debugFileStream);
+					writer = new PrintWriter(printStream);
 					
-			return num_errors;
+					// print out canonicalized function fragments
+					for (List<tree.Stm> trace: methodTraces) {
+						for (tree.Stm statement: trace) {
+							tree.TreePrint.print(writer, statement);
+						}
+					}
+				} catch (IOException e) {
+					;
+				}	
+			}
+			
+			// print out assembly
+			List <List<assem.Instruction>> fragmentInstructions = new ArrayList<List<assem.Instruction>>();
+			List <Sparc.SparcFrame> newFrameList = new ArrayList<Sparc.SparcFrame>();
+			for (int i = 0; i < methodTraces.size(); i++) {
+				
+				Sparc.CodeGen codeGenerator = new Sparc.CodeGen(methodTraces.get(i),
+																frameList.get(i));
+				fragmentInstructions.add(codeGenerator.getInstructionList());
+				newFrameList.add(codeGenerator.getFrame());
+			}
+			frameList = new ArrayList<Sparc.SparcFrame>(newFrameList);
+			newFrameList.clear();
+			
+			// For each of the fragments, perform register allocation
+			List<List<assem.Instruction>> newFragmentInstructions = new ArrayList<List<assem.Instruction>>();
+			for (int i = 0; i < fragmentInstructions.size(); i++) {
+				
+				Sparc.RegisterAllocation registerAllocater = new Sparc.RegisterAllocation(frameList.get(i),
+																						  fragmentInstructions.get(i));
+				newFragmentInstructions.add(registerAllocater.iterateThroughTemps());
+				newFrameList.add(registerAllocater.getFrame());
+			}
+			fragmentInstructions = new ArrayList<List<assem.Instruction>>(newFragmentInstructions);
+			newFragmentInstructions.clear();
+//			newFragmentInstructions.clear();
+			frameList = new ArrayList<Sparc.SparcFrame>(newFrameList);
+			newFrameList.clear();
+//			newFrameList.clear();
+			
+			// Add prelude and epilog to all instructions 
+			System.out.println("framelist: " + Integer.toString(frameList.size()));
+			System.out.println("fragment list: " + Integer.toString(fragmentInstructions.size()));
+			for (int i = 0; i < fragmentInstructions.size(); i++) {
+				if (i == 0) {
+					/* first fragment is main, don't need to allocate stack frame for it */
+					List<assem.Instruction> mainInstructions = new ArrayList<assem.Instruction>();
+					mainInstructions = fragmentInstructions.get(i);
+					assem.Instruction mainPrelude = new assem.LabelInstruction(
+							frameList.get(0).name.label);
+					
+					List<assem.Instruction> mainEpilog = new Sparc.MainEpilogGen().epilog();
+					mainInstructions.add(0, mainPrelude);
+					mainInstructions.addAll(mainInstructions.size()-1, mainEpilog);
+					newFragmentInstructions.add(mainInstructions);
+					System.out.println("Generating main");
+					System.out.println("Label: " + frameList.get(0).name.label.toString());
+				}
+				
+				else {
+					List <assem.Instruction> methodInstructions = new ArrayList<assem.Instruction>();
+					methodInstructions = fragmentInstructions.get(i);
+					List<assem.Instruction> methodPrelude = new Sparc.PreludeGen(frameList.get(i)).prelude();
+					List<assem.Instruction> methodEpilog = new Sparc.EpilogGen(frameList.get(i)).epilog();
+					methodInstructions.addAll(0, methodPrelude);
+					methodInstructions.addAll(methodEpilog);
+					newFragmentInstructions.add(methodInstructions);
+				}
+			}
+			fragmentInstructions = newFragmentInstructions;
+//			newFragmentInstructions.clear();
+			
+			/* Generate final code output */
+			StringBuilder codeOutput = new StringBuilder();
+			for (int i = 0; i < fragmentInstructions.size(); i++) {
+				Sparc.SparcFrame currFrame = frameList.get(i);
+				for (assem.Instruction instr : fragmentInstructions.get(i)) {
+					codeOutput.append(instr.format(currFrame.getMap()));
+					codeOutput.append("\n");
+				}
+			}
+			
+			writeToFile(codeOutput);
+			
+			System.out.printf("%s, errors=%d\n", filename, num_errors);
+					
+			return 0;
 			
 		} catch (FileNotFoundException e) {
-			System.out.println("Error: file " + filename + " not found");
-			return -1;
-		}
-		
-
+			System.err.println("Error: file " + filename + " not found");
+			return 0;
+		}		
 	}
+	
+	public static void writeToFile(StringBuilder codeContent) {
+		// Writes contents of instructions to file	
+		String fileToWrite;
+//		if (filename.contains(".")) {
+//			fileToWrite = filename.substring(
+//					0, filename.lastIndexOf('.'));
+//			fileToWrite = filename.concat(".s");
+//		}
+//		else {
+//			fileToWrite = filename.concat(".s");
+//		}
+		fileToWrite = removeExtension(filename);
+		fileToWrite = fileToWrite.concat(".s");	
+		
+		try {
+			FileWriter instructionWriter = new FileWriter(fileToWrite);
+			instructionWriter.append(codeContent);
+			instructionWriter.close();
+		}
+		catch (IOException e) {
+			System.err.println(e);
+		}		
+	}
+	
+//	public static String removeExtension(String fileName) {
+//		// Looked up here:
+//		// https://www.quickprogrammingtips.com/java/how-to-remove-extension-from-filename-in-java.html
+//		if (fileName.indexOf(".") > 0) {
+////			return fileName.substring(0, fileName.lastIndexOf("."));
+//			return filename.replace("$(.+)\.\\w+", "\1");
+//		}
+//		else {
+//			return fileName;
+//		}
+//	}
+	
+	   public static String removeExtension( String in )
+	   // From here:
+	   // https://stackoverflow.com/questions/3449218/remove-filename-extension-in-java
+	   {
+	       int p = in.lastIndexOf(".");
+	       if ( p < 0 )
+	           return in;
+
+	       int d = in.lastIndexOf( File.separator );
+
+	       if ( d < 0 && p == 0 )
+	           return in;
+
+	       if ( d >= 0 && d > p )
+	           return in;
+
+	       return in.substring( 0, p );
+	   }
 }

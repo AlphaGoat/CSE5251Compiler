@@ -58,7 +58,7 @@ public class LexicalScan {
 
                 }
                 catch (semanticAnalysis.TokenMgrError e) {
-                    System.err.println(e.getMessage());
+                    errors.ParseErrorMsg.complain(e.getMessage());
                     continue;
                 }
             }

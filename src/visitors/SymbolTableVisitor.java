@@ -1,14 +1,57 @@
-package main;
+package visitors;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import main.Symbol;
 
 public final class SymbolTableVisitor implements syntax.SyntaxTreeVisitor<Void>{
 	public static HashMap<Symbol, Binding> symbolTable;
 	private static ClassBinding currClass = null;
 	private static MethodBinding currMethod = null;
 	private static int currParam = 0;
+	
+	public void addFieldsToChild() {
+		/* Adds all parent fields to child class */
+		for (Map.Entry<Symbol, Binding> set:
+			symbolTable.entrySet()) {
+			
+			Symbol classKey = set.getKey();
+			
+
+			Binding b = set.getValue();
+			ClassBinding thisClass;
+			if (b instanceof ClassBinding) {
+				thisClass = (ClassBinding) b;
+			}
+			else {
+				continue;
+			}
+			
+			/* Get inheritance stack of class */
+			ArrayList<Symbol> inheritanceStack = SymbolTableUtils.buildInheritanceStack(classKey);
+			
+			if ( inheritanceStack.size() > 1) {
+				/* Add all parent fields to this class's fields */
+				for (int i = 1; i < inheritanceStack.size(); i++) {
+					
+					/* Get parent's binding */
+					Symbol parentKey = inheritanceStack.get(i);
+					
+					ClassBinding parent = (ClassBinding) symbolTable.get(parentKey);
+					
+					for ( int j = 0; j < parent.fieldList.size(); j++ ) {
+						
+						Symbol fieldKey = parent.fieldList.get(j);
+						VarBinding fieldBinding = (VarBinding) parent.fields.get(fieldKey);
+						thisClass.fieldList.add(fieldKey);
+						thisClass.fields.put(fieldKey, fieldBinding);
+					}
+				}
+			}
+		}
+	}
 	
 	public Void visit(syntax.Program n) {
 		
@@ -458,69 +501,69 @@ class MethodBinding extends Binding {
 	}
 }
 
-class PrintSymbolTable {
-	
-	int a;
-	
-	public PrintSymbolTable() {
-		for (Map.Entry<Symbol, Binding> entry: 
-			SymbolTableVisitor.symbolTable.entrySet() ) {
-			
-			String className = entry.getKey().toString();
-			Binding cb = entry.getValue();
-			
-			if (cb instanceof MainBinding) {
-				String arg = ((MainBinding) cb).arg;
-				System.out.println("Class " + className + "(Arg: " + arg + ")\n");
-			}
-			
-			else {			
-				System.out.println("Class " + className + ":");			
-				printClassBinding((ClassBinding) entry.getValue());
-			}
-		}
-	}
-	
-	private void printClassBinding(ClassBinding b) {
-		System.out.println("\tFields: ");
-		for (Map.Entry<Symbol, Binding> entry: 
-			b.fields.entrySet()) {
-			String fname = entry.getKey().toString();
-			String type = ((VarBinding) entry.getValue()).toString();
-			System.out.println("\t\t" + type + " " + fname);
-		}
-		System.out.println("\tMethods: ");
-		for (Map.Entry<Symbol, Binding> entry:
-			b.methods.entrySet()) {
-			String mname = entry.getKey().toString();
-			MethodBinding mb = (MethodBinding) entry.getValue();
-			String rtype = mb.rtype.toString();
-			
-			System.out.println("\t\t" + rtype + " " + mname + ":");
-			
-			printMethodBinding(mb);
-		}
-		
-	}
-	
-	private void printMethodBinding(MethodBinding b) {
-		System.out.println("\t\t\tParams: ");
-		for (Map.Entry<Symbol, Binding> entry:
-			b.params.entrySet()) {
-			String pname = entry.getKey().toString();
-			String type = ((VarBinding) entry.getValue()).toString();
-			System.out.println("\t\t\t\t" + type + " " + pname);
-		}
-		System.out.println("\t\t\tLocals: ");
-		for (Map.Entry<Symbol, Binding> entry:
-			b.locals.entrySet()) {
-			String lname = entry.getKey().toString();
-			String type = ((VarBinding) entry.getValue()).toString();
-			System.out.println("\t\t\t\t" + type + " " + lname);
-		}
-	}
-	
-}
+//class PrintSymbolTable {
+//	
+//	int a;
+//	
+//	public PrintSymbolTable() {
+//		for (Map.Entry<Symbol, Binding> entry: 
+//			SymbolTableVisitor.symbolTable.entrySet() ) {
+//			
+//			String className = entry.getKey().toString();
+//			Binding cb = entry.getValue();
+//			
+//			if (cb instanceof MainBinding) {
+//				String arg = ((MainBinding) cb).arg;
+//				System.out.println("Class " + className + "(Arg: " + arg + ")\n");
+//			}
+//			
+//			else {			
+//				System.out.println("Class " + className + ":");			
+//				printClassBinding((ClassBinding) entry.getValue());
+//			}
+//		}
+//	}
+//	
+//	private void printClassBinding(ClassBinding b) {
+//		System.out.println("\tFields: ");
+//		for (Map.Entry<Symbol, Binding> entry: 
+//			b.fields.entrySet()) {
+//			String fname = entry.getKey().toString();
+//			String type = ((VarBinding) entry.getValue()).toString();
+//			System.out.println("\t\t" + type + " " + fname);
+//		}
+//		System.out.println("\tMethods: ");
+//		for (Map.Entry<Symbol, Binding> entry:
+//			b.methods.entrySet()) {
+//			String mname = entry.getKey().toString();
+//			MethodBinding mb = (MethodBinding) entry.getValue();
+//			String rtype = mb.rtype.toString();
+//			
+//			System.out.println("\t\t" + rtype + " " + mname + ":");
+//			
+//			printMethodBinding(mb);
+//		}
+//		
+//	}
+//	
+//	private void printMethodBinding(MethodBinding b) {
+//		System.out.println("\t\t\tParams: ");
+//		for (Map.Entry<Symbol, Binding> entry:
+//			b.params.entrySet()) {
+//			String pname = entry.getKey().toString();
+//			String type = ((VarBinding) entry.getValue()).toString();
+//			System.out.println("\t\t\t\t" + type + " " + pname);
+//		}
+//		System.out.println("\t\t\tLocals: ");
+//		for (Map.Entry<Symbol, Binding> entry:
+//			b.locals.entrySet()) {
+//			String lname = entry.getKey().toString();
+//			String type = ((VarBinding) entry.getValue()).toString();
+//			System.out.println("\t\t\t\t" + type + " " + lname);
+//		}
+//	}
+//	
+//}
 
 
 
