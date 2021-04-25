@@ -261,7 +261,8 @@ public class Compiler {
 			// Add Header to file
 			codeOutput.insert(0,"start:\n");
 			codeOutput.insert(0, ".align 4\n");
-			codeOutput.insert(0, "    .global start\n");
+			codeOutput.insert(0, ".global start\n");
+			codeOutput.insert(0, ".section \".text\"");
 			codeOutput.insert(0, ".set SYS_exit, 1\n"
 				               + ".set SP_TRAP_LINUX, 0x90\n"
 							   + ".macro exit_program\n"
