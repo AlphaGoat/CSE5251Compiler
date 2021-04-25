@@ -227,6 +227,10 @@ public class Compiler {
 					
 					List<assem.Instruction> mainEpilog = new Sparc.MainEpilogGen().epilog();
 					mainInstructions.add(0, mainPrelude);
+					
+					// Remove weird jump instruction that is created during canonicalization
+					mainInstructions.remove(mainInstructions.size()-1);
+					
 					mainInstructions.addAll(mainInstructions.size()-1, mainEpilog);
 					newFragmentInstructions.add(mainInstructions);
 
@@ -254,6 +258,9 @@ public class Compiler {
 					codeOutput.append("\n");
 				}
 			}
+			// Add Header to file
+			codeOutput.insert(0,"start:");
+			codeOutput.insert(0, "\t.global start");
 			
 			writeToFile(codeOutput);
 			
