@@ -12,7 +12,7 @@ compile.jar :
 	$(JAVACC) -OUTPUT_DIRECTORY=$(GRAMMARDIR) $(GRAMMARDIR)/*.jj
 	$(JAVAC) -classpath .:$(SUPPORT) */*.java
 	jar cvmf COMPILEPLS.MF compile.jar */*.class	
-	sparc-linux-gcc -c runtime.c -o runtime.o
+	sparc-linux-gcc -g -c runtime.c -o runtime.o
 	chmod u+x compile.sh
 
 clean :
