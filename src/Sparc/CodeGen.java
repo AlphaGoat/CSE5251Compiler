@@ -949,11 +949,19 @@ public class CodeGen {
 		
 		String comment = "CONST -- munchConst";
 		
-		assem.Instruction instr = new assem.OperationInstruction(
-				SparcTemplates.MOV(Integer.toString(constant), 
-				newTempGenerator(DEST, 0)), 
-				comment, dest);
-				
+		assem.Instruction instr;
+		if (constant < Math.pow(2, 13)) {
+			instr = new assem.OperationInstruction(
+					SparcTemplates.MOV(Integer.toString(constant), 
+					newTempGenerator(DEST, 0)), 
+					comment, dest);
+		}
+		else {
+			instr = new assem.OperationInstruction(
+					SparcTemplates.SET(Integer.toString(constant), newTempGenerator(DEST, 0)),
+					comment, dest);
+		}
+
 		emit(instr);
 		
 		return dest;

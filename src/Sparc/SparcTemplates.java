@@ -249,6 +249,15 @@ public class SparcTemplates {
 		return joiner.toString();
 	}
 	
+	//////////////// SET TEMPLATE //////////////////////////////
+	public static String SET(String constant, String register) {
+		StringJoiner joiner = new StringJoiner(" ");
+		joiner.add("SET")
+			  .add(constant + ",")
+			  .add(register);
+		return joiner.toString();
+	}
+	
 	////////////////// RET TEMPLATE ///////////////////////////////////////////
 	public static String RET() {
 		/* Honestly, don't really need this template. This is mainly 
