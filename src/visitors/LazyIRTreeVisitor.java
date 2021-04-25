@@ -255,10 +255,7 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 
 	@Override
 	public LazyIRTree visit(syntax.MethodDecl n) {
-		
-		// Set "while" counter to '0'
-		whileCounter = 0;
-		
+				
 		// Generate new method fragment from statements
 		currMethodKey = Symbol.symbol(n.i.toString());
 		

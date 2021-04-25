@@ -176,10 +176,8 @@ public class SparcTemplates {
 		
 		StringJoiner joiner = new StringJoiner(" ");
 		joiner.add("CMP")
-			  .add(exp1)
-			  .add(",")
+			  .add(exp1 + ",")
 			  .add(exp2);
-	//		  .add("\n");
 		
 		return joiner.toString();
 	}

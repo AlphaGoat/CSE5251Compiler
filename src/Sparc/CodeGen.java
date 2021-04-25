@@ -190,12 +190,9 @@ public class CodeGen {
 					leftReg.toString(), right);
 			comment.replaceAll("[\\n ]", "");
 
-//			assem.Instruction cmpInstr = new assem.OperationInstruction(
-//					SparcTemplates.CMP(Integer.toString(right),
-//					newTempGenerator(DEST, 0)), comment, leftReg, null);
 			assem.Instruction cmpInstr = new assem.OperationInstruction(
-					SparcTemplates.CMP(Integer.toString(right),
-					newTempGenerator(SRC, 0)), comment, null, leftReg);
+					SparcTemplates.CMP(newTempGenerator(SRC, 0), 
+							Integer.toString(right)), comment, null, leftReg);
 			
 			emit(cmpInstr);
 			
@@ -210,12 +207,9 @@ public class CodeGen {
 					left, rightReg.toString());
 			comment.replaceAll("[\\n ]", "");
 
-//			assem.Instruction cmpInstr = new assem.OperationInstruction(
-//					SparcTemplates.CMP(Integer.toString(left),
-//					newTempGenerator(DEST, 0)), comment, rightReg, null);
 			assem.Instruction cmpInstr = new assem.OperationInstruction(
-					SparcTemplates.CMP(Integer.toString(left),
-					newTempGenerator(SRC, 0)), comment, null, rightReg);
+					SparcTemplates.CMP(newTempGenerator(SRC, 0), 
+					Integer.toString(left)), comment, null, rightReg);
 			
 			emit(cmpInstr);
 		}
