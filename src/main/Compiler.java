@@ -260,7 +260,8 @@ public class Compiler {
 			}
 			// Add Header to file
 			codeOutput.insert(0,"start:\n");
-			codeOutput.insert(0, "\t.global start\n");
+			codeOutput.insert(0, "    .global start\n");
+			codeOutput.insert(0, "    SECTION .text\n");
 			
 			writeToFile(codeOutput);
 			
