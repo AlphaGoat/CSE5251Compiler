@@ -259,9 +259,8 @@ public class Compiler {
 				}
 			}
 			// Add Header to file
-			codeOutput.insert(0,"start:\n");
-			codeOutput.insert(0, "    .global start\n");
-			codeOutput.insert(0, "    SECTION .text\n");
+			codeOutput.insert(0,"_start:\n");
+			codeOutput.insert(0, "    .global _start\n");
 			
 			writeToFile(codeOutput);
 			
