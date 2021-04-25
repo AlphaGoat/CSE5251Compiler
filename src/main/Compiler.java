@@ -263,17 +263,17 @@ public class Compiler {
 			codeOutput.insert(0, ".align 4\n");
 			codeOutput.insert(0, ".global start\n");
 			codeOutput.insert(0, ".section \".text\"\n");
-			codeOutput.insert(0, ".set SYS_exit, 1\n"
-				               + ".set SP_TRAP_LINUX, 0x90\n"
-							   + ".macro exit_program\n"
-				               + "  set stdout, %o0\n"
-				               + "  call fflush\n"
-				               + "  nop\n"
-				               + "  clr %o0\n"
-				               + "  set SYS_exit, %g1\n"
-				               + "  ta SP_TRAP_LINX\n"
-				               + "  .endm\n");
-			
+//			codeOutput.insert(0, ".set SYS_exit, 1\n"
+//				               + ".set SP_TRAP_LINUX, 0x90\n"
+//							   + ".macro exit_program\n"
+//				               + "  set stdout, %o0\n"
+//				               + "  call fflush\n"
+//				               + "  nop\n"
+//				               + "  clr %o0\n"
+//				               + "  set SYS_exit, %g1\n"
+//				               + "  ta SP_TRAP_LINX\n"
+//				               + "  .endm\n");
+//			
 			writeToFile(codeOutput);
 			
 			System.out.printf("%s, errors=%d\n", filename, num_errors);
