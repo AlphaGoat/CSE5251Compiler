@@ -217,8 +217,6 @@ public class Compiler {
 //			newFrameList.clear();
 			
 			// Add prelude and epilog to all instructions 
-			System.out.println("framelist: " + Integer.toString(frameList.size()));
-			System.out.println("fragment list: " + Integer.toString(fragmentInstructions.size()));
 			for (int i = 0; i < fragmentInstructions.size(); i++) {
 				if (i == 0) {
 					/* first fragment is main, don't need to allocate stack frame for it */
@@ -231,8 +229,7 @@ public class Compiler {
 					mainInstructions.add(0, mainPrelude);
 					mainInstructions.addAll(mainInstructions.size()-1, mainEpilog);
 					newFragmentInstructions.add(mainInstructions);
-					System.out.println("Generating main");
-					System.out.println("Label: " + frameList.get(0).name.label.toString());
+
 				}
 				
 				else {

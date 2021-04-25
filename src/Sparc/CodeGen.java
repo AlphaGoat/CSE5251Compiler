@@ -380,8 +380,32 @@ public class CodeGen {
 //				String comment = String.format("MOVE(MEM( +(%s, %d))) -- munchMove",
 //						src.toString(), offset);
 //				comment.replaceAll("[\\n]", "");
-
 				
+//				if (src instanceof tree.CONST) {
+//					int value = ((tree.CONST) src).value;	
+//					
+//					// intermediate instruction 
+//					tree.NameOfTemp g1 = frame.G1().temp;
+//					assem.Instruction intermediate_instr = new assem.OperationInstruction(
+//							SparcTemplates.MOV(Integer.toString(value), newTempGenerator(DEST, 0)),
+//							"Move constant to memory", g1);
+////					frame.addToMap(g1, "%g1");
+//					emit(intermediate_instr);
+//					
+//					List<tree.NameOfTemp> srcList = new ArrayList<tree.NameOfTemp>() {{
+//						add(g1);
+//						add(munchExp(dst));
+//					}};
+//					assem.Instruction instr = new assem.OperationInstruction(
+//							SparcTemplates.STORE(op, newTempGenerator(SRC, 0), 
+//							newTempGenerator(SRC, 1), Integer.toString(offset)),
+//							null, 
+//							null, 
+//							srcList);						
+//					emit(instr);
+//					
+//				}
+
 				List<tree.NameOfTemp> srcList = new ArrayList<tree.NameOfTemp>() {{
 					add(munchExp(src));
 					add(munchExp(dst));
@@ -400,30 +424,49 @@ public class CodeGen {
 			// MOVE(MEM( +(CONST(i), e1)), e2)
 			else if (dstExp.left instanceof tree.CONST ) {
 				
-//					String dest_str = newTempGenerator(DEST, 0);
-//					String src_str = newTempGenerator(SRC, 0);
-				
+
 					int op = dstExp.binop;
 					int offset = ((tree.CONST) dstExp.left).value;
-					tree.Exp src = s.src;
-					tree.Exp dest = dstExp.right;
+					tree.Exp exp2 = s.src;
+					tree.Exp exp1 = dstExp.right;
 					
 					String comment = "MOVE(MEM( +(Const(i), dest), src)) -- munchMove";
 					comment.replaceAll("[\\n]", "");
 
+					// Check to see if right exp is a const. If it is, do not generate another 
+					// temp for it
+//					if (exp2 instanceof tree.CONST) {
+//						int value = ((tree.CONST) exp2).value;	
+//						
+//						// intermediate instruction 
+//						tree.NameOfTemp g0 = frame.G0().temp;
+//						tree.NameOfTemp g1 = frame.G1().temp;
+//						assem.Instruction intermediate_instr = new assem.OperationInstruction(
+//								SparcTemplates.MOV(Integer.toString(value), 
+//								newTempGenerator(DEST, 0)),
+//								"Move constant to memory", g1);
+//	//						frame.addToMap(g1, "%g1");
+//						emit(intermediate_instr);
+//						
+//						List<tree.NameOfTemp> srcList = new ArrayList<tree.NameOfTemp>() {{
+//							add(g1);
+//							add(munchExp(exp1));
+//						}};
+//						assem.Instruction instr = new assem.OperationInstruction(
+//								SparcTemplates.STORE(op, newTempGenerator(SRC, 0), 
+//								newTempGenerator(SRC, 1), Integer.toString(offset)),
+//								comment, 
+//								null, 
+//								srcList);						
+//						emit(instr);
+//						
+//					}
 					
 					List<tree.NameOfTemp> srcList = new ArrayList<tree.NameOfTemp>() {{
-						add(munchExp(src));
-						add(munchExp(dest));
+						add(munchExp(exp2));
+						add(munchExp(exp1));
 					}};
-					
-//					assem.Instruction instr = new assem.MoveInstruction(
-//							SparcTemplates.STORE(op, src_str, 
-//							dest_str, Integer.toString(offset)),
-//							comment, 
-//							munchExp(dest), 
-//							munchExp(src));
-					
+										
 					assem.Instruction instr = new assem.OperationInstruction(
 							SparcTemplates.STORE(op, newTempGenerator(SRC, 0), 
 							newTempGenerator(SRC, 1), Integer.toString(offset)),
@@ -438,9 +481,9 @@ public class CodeGen {
 			// MOVE (MEM( +(e1, e2)), e3)
 			else {
 				
-				tree.Exp dest1 = dstExp.left;
-				tree.Exp dest2 = dstExp.right;
-				tree.Exp src = s.src;
+				tree.Exp exp1 = dstExp.left;
+				tree.Exp exp2 = dstExp.right;
+				tree.Exp exp3 = s.src;
 				
 //				List<tree.NameOfTemp> destList = new ArrayList<tree.NameOfTemp>() {{
 //					add(munchExp(dest1));
@@ -450,19 +493,43 @@ public class CodeGen {
 //				List<tree.NameOfTemp> srcList = new ArrayList<tree.NameOfTemp>() {{
 //					add(munchExp(src));
 //				}};
+				
+//				if (exp3 instanceof tree.CONST) {
+//					int value = ((tree.CONST) exp3).value;	
+//					
+//					// intermediate instruction 
+//					tree.NameOfTemp g1 = frame.G1().temp;
+//					assem.Instruction intermediate_instr = new assem.OperationInstruction(
+//							SparcTemplates.MOV(Integer.toString(value), 
+//							newTempGenerator(DEST, 0)),
+//							"Move constant to memory", g1);
+////					frame.addToMap(g1, "%g1");
+//					emit(intermediate_instr);
+//					
+//					List<tree.NameOfTemp> srcList = new ArrayList<tree.NameOfTemp>() {{
+//						add(g1);
+//						add(munchExp(exp1));
+//						add(munchExp(exp2));
+//					}};
+//					
+//					assem.Instruction instr = new assem.OperationInstruction(
+//							SparcTemplates.STORE(dstExp.binop, newTempGenerator(SRC, 0), 
+//							newTempGenerator(SRC, 1), newTempGenerator(SRC, 2)),
+//							null, 
+//							null, 
+//							srcList);						
+//					emit(instr);
+//					
+//				}
+				
 				List<tree.NameOfTemp> srcList = new ArrayList<tree.NameOfTemp>() {{
-					add(munchExp(src));
-					add(munchExp(dest1));
-					add(munchExp(dest2));
+					add(munchExp(exp3));
+					add(munchExp(exp1));
+					add(munchExp(exp2));
 				}};
 				
 				String comment = "MOVE(MEM( +(e1, e2)), e3)";
 				comment.replaceAll("[\\n ]", "");
-
-//				assem.Instruction instr = new assem.OperationInstruction(
-//						SparcTemplates.STORE(dstExp.binop, newTempGenerator(SRC, 0), 
-//											 newTempGenerator(DEST, 1), newTempGenerator(DEST,2)),
-//											 comment, destList, srcList);
 				
 				assem.Instruction instr = new assem.OperationInstruction(
 						SparcTemplates.STORE(dstExp.binop, newTempGenerator(SRC, 0), 
@@ -532,46 +599,24 @@ public class CodeGen {
 			/////// TEMP /////////////////////
 //	//		tree.NameOfTemp imDest = frame.popRegister();
 			//////////////////////////////////
-			
-//			String g0_string = frame.globalRegisters.get(0);
-			
-//			tree.TEMP g0Temp = new tree.TEMP(g0_string);
-//			tree.NameOfTemp g0_name = g0Temp.temp;
-//			frame.mapNameOfTempToRegister(g0_name, g0_string);
 
-			tree.TEMP g0_name = frame.globalZeroRegister;
+			tree.NameOfTemp g0 = frame.globalZeroRegister.temp;
 					
 			int constant = ((tree.CONST)((tree.MEM) s.dst).exp).value;
 			
-//			String intermediateComment = "Add Const to %l0.";
-//			intermediateComment += " Part of MOVE(MEM(CONST(i)), e2) -- munchMOVE";
-//			
-//			assem.Instruction intermediate = new assem.OperationInstruction(
-//					SparcTemplates.OPR(tree.BINOP.PLUS, newTempGenerator(SRC, 0), 
-//					Integer.toString(constant), newTempGenerator(DEST, 0)), intermediateComment, 
-//					imDest, 
-//					g0_name.temp);
-//			
-			// EMIT intermediate
-//			emit(intermediate);
-			
+
 			tree.Exp src = s.src;
 			
 			String comment = "MOVE(Const(i), e2) -- munchMOVE";
-			
-//			assem.Instruction instr = new assem.MoveInstruction(
-//					SparcTemplates.STORE(munchExp(src).toString(), imDest.toString()),
-//					comment, new tree.NameOfTemp(imDest.toString()), munchExp(src));
-//			
-//			assem.Instruction instr = new assem.MoveInstruction(
-//					SparcTemplates.STORE(tree.BINOP.PLUS, newTempGenerator(SRC, 0),
-//									newTempGenerator(DEST, 0), Integer.toString(constant)),
-//									g0_name.temp, munchExp(src));
+			List<tree.NameOfTemp> srcList = new ArrayList<tree.NameOfTemp>() {{
+				add(munchExp(src));
+				add(g0);
+			}};
 			
 			assem.Instruction instr = new assem.OperationInstruction(
 					SparcTemplates.STORE(tree.BINOP.PLUS, newTempGenerator(SRC, 0),
-									Integer.toString(constant), Integer.toString(0)),
-									comment, null, munchExp(src));
+									newTempGenerator(SRC, 1), Integer.toString(constant)),
+									comment, null, srcList);
 			emit(instr);
 		}
 		

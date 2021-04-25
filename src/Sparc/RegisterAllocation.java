@@ -36,6 +36,7 @@ public class RegisterAllocation {
 			// registers that do not already have a mapping in the
 			// frame table to available registers
 			assem.Instruction instr = ilist.get(i);
+			System.out.println(instr.format());
 			if (instr instanceof assem.OperationInstruction ||
 					instr instanceof assem.MoveInstruction) {
 				// Go through sources and allocate registers if
@@ -140,6 +141,7 @@ public class RegisterAllocation {
 								}
 								else if (global_count == 2) {
 									newDests.add(currFrame.globalThreeRegister.temp);
+									System.out.println("global three as dest");
 									global_count++;
 								}
 								else {
@@ -162,6 +164,7 @@ public class RegisterAllocation {
 						tree.NameOfTemp globalDest;
 						if (k == 0) {  globalDest = currFrame.globalOneRegister.temp; }
 						else if (k == 1) { globalDest = currFrame.globalTwoRegister.temp; }
+						else if (k == 2) { globalDest = currFrame.globalThreeRegister.temp; }
 						else { break; } // If we get here, we're just plumb out of luck
 						assem.Instruction load = new assem.OperationInstruction(
 								SparcTemplates.LOAD(tree.BINOP.MINUS, newTempGenerator(SRC, 0), 
@@ -178,6 +181,7 @@ public class RegisterAllocation {
 						tree.NameOfTemp globalSrc;
 						if (k == 0) { globalSrc = currFrame.globalOneRegister.temp; }
 						else if (k == 1) {globalSrc = currFrame.globalTwoRegister.temp; }
+						else if (k == 2) {globalSrc = currFrame.globalThreeRegister.temp; }
 						else { break; } // ...same as above. Scream to God about this injustice?
 						assem.Instruction store = new assem.OperationInstruction(
 								SparcTemplates.STORE(tree.BINOP.MINUS, newTempGenerator(SRC, 0),
