@@ -18,3 +18,4 @@ compile.jar :
 clean :
 	/bin/rm -f compile.jar
 	/bin/rm -f */*.class
+	/bin/rm -f runtime.o
