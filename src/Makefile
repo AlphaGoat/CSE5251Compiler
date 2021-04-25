@@ -1,7 +1,7 @@
 JAVAC  := javac
 JAVACC := javacc
 
-GRAMMARDIR := src/semanticAnalysis
+GRAMMARDIR := semanticAnalysis
 
 default : compiler
 
@@ -10,8 +10,8 @@ compiler : compile.jar
 # options: c--create; f--name of jar file; e--entry point
 compile.jar :
 	$(JAVACC) -OUTPUT_DIRECTORY=$(GRAMMARDIR) $(GRAMMARDIR)/*.jj
-	$(JAVAC) -classpath .:$(SUPPORT) src/*/*.java
-	jar cvmf COMPILEPLS.MF compile.jar src/*/*.class	
+	$(JAVAC) -classpath .:$(SUPPORT) */*.java
+	jar cvmf COMPILEPLS.MF compile.jar */*.class	
 	sparc-linux-gcc -c runtime.c -o runtime.o
 	chmod u+x compile.sh
 
