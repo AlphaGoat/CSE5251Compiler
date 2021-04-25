@@ -231,7 +231,7 @@ public class Compiler {
 					// Remove weird jump instruction that is created during canonicalization
 					mainInstructions.remove(mainInstructions.size()-1);
 					
-					mainInstructions.addAll(mainInstructions.size()-1, mainEpilog);
+					mainInstructions.addAll(mainInstructions.size(), mainEpilog);
 					newFragmentInstructions.add(mainInstructions);
 
 				}
@@ -259,8 +259,8 @@ public class Compiler {
 				}
 			}
 			// Add Header to file
-			codeOutput.insert(0,"start:");
-			codeOutput.insert(0, "\t.global start");
+			codeOutput.insert(0,"start:\n");
+			codeOutput.insert(0, "\t.global start\n");
 			
 			writeToFile(codeOutput);
 			
