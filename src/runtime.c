@@ -9,9 +9,10 @@
  * compile with 'gcc':
  * sparc-linux-gcc -c runtime.c -o runtime.o
  */
-void print_int(unsigned int n) {
+int print_int(int n) {
     printf("%d\n", n);
     fflush(stdout);
+    return 1;
 }
 
 int * alloc_object(int n) {
