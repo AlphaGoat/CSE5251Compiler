@@ -983,7 +983,7 @@ class IfThenElseExp extends LazyIRTree {
 
 class LessThanExp extends LazyIRTree {
 	
-	private int conditionCounter;
+	private static int conditionCounter;
 	private final LazyIRTree exp1, exp2;
 	
 	LessThanExp(LazyIRTree e1, LazyIRTree e2) {
