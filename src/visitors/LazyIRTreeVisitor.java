@@ -1007,6 +1007,7 @@ class LessThanExp extends LazyIRTree {
 		
 		String condNumberLabel = String.format(
 				"%03d", conditionCounter);
+		conditionCounter++;
 		
 		tree.Stm seq = tree.SEQ.fromList(
 				new tree.CJUMP(tree.CJUMP.LT, 
@@ -1022,7 +1023,6 @@ class LessThanExp extends LazyIRTree {
 				new tree.LABEL("join" + condNumberLabel)
 				);
 		
-		conditionCounter++;
 		
 		return new tree.RET(seq, storeRegister);
 	}
