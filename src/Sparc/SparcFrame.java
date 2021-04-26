@@ -87,6 +87,12 @@ public class SparcFrame extends Frame {
 
 		}
 		
+		/* push available input registers */
+		for (int i = 5; i >= formals.size(); i--) {
+			availableRegisters.push(inRegisters.get(i));
+		}
+			
+		
 		// Allocate new frame pointer 
 		tree.NameOfTemp fp_name = new tree.NameOfTemp("%fp");
 		framePointer = new tree.TEMP(fp_name);
@@ -237,12 +243,7 @@ public class SparcFrame extends Frame {
 //		for (int i = 3; i < globalRegisters.size(); i++) 
 //			availableRegisters.push(globalRegisters.get(i));
 		
-		/* push available input registers */
-		for (int i = 5; i >= formals.size(); i--) {
-			availableRegisters.push(inRegisters.get(i));
-			System.out.println(i);
-		}
-			
+
 		for (int i = 7; i >= 0; i--) 
 			availableRegisters.push(localRegisters.get(i));
 		
