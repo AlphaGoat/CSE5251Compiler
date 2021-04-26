@@ -14,20 +14,51 @@ public class ParseErrorMsg implements ErrorMsg{
 		/* Have to do some string manipulation to get 
 		 * line number and column number
 		 */
-		int lineNumber = 0;
-		int colNumber = 0;
+		String lineNumber = "";
+		String colNumber = "";
 		boolean lineFound = false, colFound = false;
 		char[] tokens = msg.toCharArray();
 		ArrayList<Character> newMsg = new ArrayList<Character>();
-		for (char c: tokens) {
+		for (int i = 0; i < tokens.length; i++) {
+			char c = tokens[i];
 			try {
 				int n = Integer.parseUnsignedInt(String.valueOf(c));
 				if (!(lineFound)) {
-					lineNumber = n;
+					lineNumber = String.valueOf(c);
 					lineFound = true;
+					if (i < tokens.length - 2) {
+						int j = 1;
+						char next = tokens[i+j];
+						try {
+							while(true) {
+								Integer.parseUnsignedInt(String.valueOf(next));
+								lineNumber += String.valueOf(next);
+								j++;
+								next = tokens[i+j];
+							}
+						} catch(Exception e) {
+							i = i+j-1;
+							continue;
+						}
+					}
 				} else if (!(colFound)) {
-					colNumber = n;
+					colNumber = String.valueOf(c);
 					colFound = true;
+					if (i < tokens.length - 2) {
+						int j = 1;
+						char next = tokens[i+j];
+						try {
+							while(true) {
+								Integer.parseUnsignedInt(String.valueOf(next));
+								colNumber += String.valueOf(next);
+								j++;
+								next = tokens[i + j];
+							}
+						} catch(Exception e) {
+//							i = i + j;
+							break;
+						}
+					}
 				} else {
 					newMsg.add(c);
 				}
@@ -36,7 +67,6 @@ public class ParseErrorMsg implements ErrorMsg{
 				continue;
 			}
 		}
-	
 		StringBuilder sb = new StringBuilder();
 		for (Character ch : newMsg) {
 			sb.append(ch);

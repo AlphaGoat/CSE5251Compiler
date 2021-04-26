@@ -13,7 +13,7 @@ compile.jar :
 	$(JAVAC) -classpath .:$(SUPPORT) */*.java
 	jar cvmf COMPILEPLS.MF compile.jar */*.class	
 	sparc-linux-gcc -g -c runtime.c -o runtime.o
-	chmod u+x compile.sh
+	chmod a+x assemble
 
 clean :
 	/bin/rm -f compile.jar
