@@ -46,7 +46,6 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 
 			// Lookup local in stack frame
 			return currFrame.lookupVar(varKey); 
-
 			
 		}
 		

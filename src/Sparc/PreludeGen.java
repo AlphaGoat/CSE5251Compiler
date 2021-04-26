@@ -44,6 +44,8 @@ public class PreludeGen {
 			add("LOCALS");
 			add("TEMPS");
 			add("ARGSB");
+			add("1");
+			add("16");
 		}};
 		String stackPointer = currFrame.getRegisterMapping(
 				currFrame.stackPointer.temp);
