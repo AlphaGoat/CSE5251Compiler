@@ -36,6 +36,7 @@ public class RegisterAllocation {
 			// registers that do not already have a mapping in the
 			// frame table to available registers
 			assem.Instruction instr = ilist.get(i);
+			System.out.println(instr.format());
 			if (instr instanceof assem.OperationInstruction ||
 					instr instanceof assem.MoveInstruction) {
 				// Go through sources and allocate registers if
@@ -158,6 +159,7 @@ public class RegisterAllocation {
 					/* Generate instructions to load srcs from stack frame */
 					List <assem.Instruction> loadFromFrameInstrs = new ArrayList<assem.Instruction>();
 					for (int k = 0; k < srcsToLoad.size(); k++) {
+						System.out.println("srcsToLoad: " + srcsToLoad.toString());
 						int offset = currFrame.getTempMemOffset(srcsToLoad.get(k)) * currFrame.getWordSize();
 						tree.NameOfTemp globalDest;
 						if (k == 0) {  globalDest = currFrame.globalOneRegister.temp; }

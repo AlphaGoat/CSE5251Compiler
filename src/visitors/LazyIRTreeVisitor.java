@@ -7,6 +7,7 @@ import main.Symbol;
 import tree.BINOP;
 import tree.CONST;
 import tree.MEM;
+import tree.MOVE;
 import tree.SEQ;
 
 
@@ -722,8 +723,26 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 				tree.BINOP.MUL,
 				new tree.BINOP(tree.BINOP.PLUS, arraySize, tree.CONST.ONE),
 				new tree.CONST(currFrame.getWordSize()));
-				
-		return new ExpIRTree(new tree.CALL(name, bytesToAlloc));
+		
+		// Perform call
+		tree.Exp allocCall = new tree.CALL(name, bytesToAlloc);
+		
+		// Move to TEMP for now
+		tree.Exp arrayPointer = tree.TEMP.generateTEMP("%TEMP");
+		System.out.println("Name of temp for array: " + ((tree.TEMP) arrayPointer).toString());
+		tree.Stm moveToPointer = new tree.MOVE(arrayPointer, allocCall);
+		
+		// Now Move the length of that array to the memory location given
+		// by the poineter
+		tree.Stm MoveLength = new tree.MOVE(new tree.MEM(arrayPointer), arraySize);
+		
+		// Now chain function call and move length to pointer location statements together 
+		tree.Stm seq = new tree.SEQ(moveToPointer, MoveLength);
+		
+		// Perform moveLength statement and return pointer
+		return new ExpIRTree(new tree.RET(seq, arrayPointer));
+		
+//		return new ExpIRTree(new tree.CALL(name, bytesToAlloc));
 	}
 
 	@Override
