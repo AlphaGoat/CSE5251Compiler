@@ -20,3 +20,4 @@ call runtime_print_int
   nop
 ret
 restore
+.endm
