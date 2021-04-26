@@ -353,9 +353,11 @@ public class SparcFrame extends Frame {
 		 * that provides an offset to the frame pointer in place of 
 		 * a move register instruction
 		 */
-		numTempsInFrame++;
-		tempsInFrame.put(t, numTempsInFrame);
-		
+		/* Check if the dest is already in the frame first */
+		if (!tempsInFrame.containsKey(t)) {		
+			numTempsInFrame++;
+			tempsInFrame.put(t, numTempsInFrame);
+		}
 	}
 } 
 
