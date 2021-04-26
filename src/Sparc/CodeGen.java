@@ -344,7 +344,7 @@ public class CodeGen {
 						SparcTemplates.STORE(tree.BINOP.PLUS, 
 						newTempGenerator(SRC, 0), newTempGenerator(DEST, 0),
 						Integer.toString(offset)), comment,
-						frame.FP().temp, src);			
+						frame.SP().temp, src);			
 				emit(moveInstr);
 			}
 					
