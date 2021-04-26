@@ -36,7 +36,6 @@ public class RegisterAllocation {
 			// registers that do not already have a mapping in the
 			// frame table to available registers
 			assem.Instruction instr = ilist.get(i);
-			System.out.println(instr.format());
 			if (instr instanceof assem.OperationInstruction ||
 					instr instanceof assem.MoveInstruction) {
 				// Go through sources and allocate registers if

@@ -729,7 +729,6 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 		
 		// Move to TEMP for now
 		tree.Exp arrayPointer = tree.TEMP.generateTEMP("%TEMP");
-		System.out.println("Name of temp for array: " + ((tree.TEMP) arrayPointer).toString());
 		tree.Stm moveToPointer = new tree.MOVE(arrayPointer, allocCall);
 		
 		// Now Move the length of that array to the memory location given
