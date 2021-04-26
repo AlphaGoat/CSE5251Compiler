@@ -8,7 +8,7 @@ public class MainEpilogGen {
 		List<assem.Instruction> epilog = new ArrayList<assem.Instruction>() {{
 			add(new assem.OperationInstruction(SparcTemplates.CLR(
 					"%o0"), "%o0 := 0; program status=0=success"));
-			add(new assem.OperationInstruction(SparcTemplates.CALL("exit"),
+			add(new assem.OperationInstruction(SparcTemplates.CALL("exit_program"),
 					"flush and exit"));
 		}};
 		return epilog;
