@@ -445,6 +445,7 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 		
 		String condNumberLabel = String.format(
 				"%03d", whileCounter);
+		whileCounter++;
 		
 		tree.NameOfLabel test = new tree.NameOfLabel("while", "test" + condNumberLabel);
 		tree.NameOfLabel body = new tree.NameOfLabel("while", "body" + condNumberLabel);
@@ -462,7 +463,6 @@ public class LazyIRTreeVisitor implements syntax.SyntaxTreeVisitor<LazyIRTree> {
 					new tree.LABEL(done)
 				);
 		
-		whileCounter++;
 		return new StmIRTree(seq);
 	}
 

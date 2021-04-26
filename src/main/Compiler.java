@@ -143,22 +143,22 @@ public class Compiler {
 			// Print to debug file
 			PrintWriter writer; 
 			File debugFile = new File("/home/alphagoat/eclipse-workspace/MiniJavaCompiler/logs/log.txt");
-//			if (verbose) {
-//				try {
-//					debugFile.createNewFile();				
-//					FileOutputStream debugFileStream = new FileOutputStream(debugFile);
-//					PrintStream printStream = new PrintStream(debugFileStream);
-//					writer = new PrintWriter(printStream);
-//					
-//	//				 print out function fragments in IR Tree
-//					for (visitors.MethodFragment fragment: lazy.methodFragments) {
-//						tree.Stm body = fragment.getBody();
-//						tree.TreePrint.print(writer, body);
-//					}
-//				} catch (IOException e) {
-//					;
-//				}
-//			}
+			if (verbose) {
+				try {
+					debugFile.createNewFile();				
+					FileOutputStream debugFileStream = new FileOutputStream(debugFile);
+					PrintStream printStream = new PrintStream(debugFileStream);
+					writer = new PrintWriter(printStream);
+					
+	//				 print out function fragments in IR Tree
+					for (visitors.MethodFragment fragment: lazy.methodFragments) {
+						tree.Stm body = fragment.getBody();
+						tree.TreePrint.print(writer, body);
+					}
+				} catch (IOException e) {
+					;
+				}
+			}
 
 			List<Sparc.SparcFrame> frameList = new ArrayList<Sparc.SparcFrame>();
 			ArrayList<List<tree.Stm>> methodTraces = new ArrayList<List<tree.Stm>>();
@@ -169,24 +169,24 @@ public class Compiler {
 				frameList.add((Sparc.SparcFrame) fragment.getMethodFrame());
 			}
 			
-			if (verbose) {
-				try {
-					debugFile.createNewFile();				
-					FileOutputStream debugFileStream = new FileOutputStream(debugFile);
-					PrintStream printStream = new PrintStream(debugFileStream);
-					writer = new PrintWriter(printStream);
-					
-					// print out canonicalized function fragments
-					for (List<tree.Stm> trace: methodTraces) {
-						for (tree.Stm statement: trace) {
-							tree.TreePrint.print(writer, statement);
-						}
-					}
-				} catch (IOException e) {
-					;
-				}	
-			}
-			
+//			if (verbose) {
+//				try {
+//					debugFile.createNewFile();				
+//					FileOutputStream debugFileStream = new FileOutputStream(debugFile);
+//					PrintStream printStream = new PrintStream(debugFileStream);
+//					writer = new PrintWriter(printStream);
+//					
+//					// print out canonicalized function fragments
+//					for (List<tree.Stm> trace: methodTraces) {
+//						for (tree.Stm statement: trace) {
+//							tree.TreePrint.print(writer, statement);
+//						}
+//					}
+//				} catch (IOException e) {
+//					;
+//				}	
+//			}
+//			
 			// print out assembly
 			List <List<assem.Instruction>> fragmentInstructions = new ArrayList<List<assem.Instruction>>();
 			List <Sparc.SparcFrame> newFrameList = new ArrayList<Sparc.SparcFrame>();
