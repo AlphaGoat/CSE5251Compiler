@@ -13,6 +13,7 @@ import java.util.ArrayList;
 //import main.SymbolTableVisitor.MethodBinding;
 import frame.Frame;
 
+
 public class SparcFrame extends Frame {
 	public final int wordSize = 4;
 	private int maxArgs = 0; // Maximum number of arguments in function
