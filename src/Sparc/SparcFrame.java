@@ -256,7 +256,9 @@ public class SparcFrame extends Frame {
 	
 	public void addToMap(tree.NameOfTemp n, String s) {
 		/* Add a mapping to the register map */
+		numTempsInFrame++;
 		tempToRegMap.put(n, s);
+		tempsInFrame.put(n, numTempsInFrame);
 	}
 	
 	public boolean registerAvail() {
