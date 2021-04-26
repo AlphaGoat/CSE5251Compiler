@@ -1009,6 +1009,7 @@ class LessThanExp extends LazyIRTree {
 				"%03d", conditionCounter);
 		conditionCounter++;
 		
+		
 		tree.Stm seq = tree.SEQ.fromList(
 				new tree.CJUMP(tree.CJUMP.LT, 
 							   exp1.asExp(),
