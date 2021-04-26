@@ -13,11 +13,3 @@ clr  %o0 			 ! %o0 := 0; program status=0=success
 mov  SYS_exit, %g1   ! %g1 := SYS_exit; determine system call
 ta   SP_TRAP_LINUX
 .endm
-
-.macro print_int
-MOV %i0, %o0
-call runtime_print_int
-  nop
-ret
-restore
-.endm
