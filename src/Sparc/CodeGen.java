@@ -29,6 +29,7 @@ public class CodeGen {
 		DEST = 0,
 		SRC = 1;
 	
+	
 	private static int temp_count = 0;
 	
 //	tree.TEMP stackPointer;
